@@ -1,10 +1,10 @@
-import MyLibrary from "../lib"
+import { Collection } from "../lib"
 
-const myLibraryInstance = new MyLibrary()
+const collection = new Collection()
 
 const body = document.querySelector("body")
-if (body) body.innerHTML = `<h1>Hello World!</h1>`
+if (body) {
+  body.innerHTML = `<h1>Hello World!</h1>`
+}
 
-console.log("myLibraryInstance", myLibraryInstance)
-
-myLibraryInstance.myMethod()
+console.log("collection", collection)

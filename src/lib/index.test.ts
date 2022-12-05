@@ -1,5 +1,5 @@
-import MyLibrary from "./"
+import { Collection } from "./"
 
 it("Runs without crashing", () => {
-  new MyLibrary()
+  new Collection()
 })

@@ -1,4 +1,4 @@
-class MyLibrary {
+export class Collection {
   constructor() {
     console.log("Library constructor loaded")
   }
@@ -8,5 +8,3 @@ class MyLibrary {
     return true
   }
 }
-
-export default MyLibrary
