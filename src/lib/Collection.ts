@@ -1,8 +1,8 @@
 import { makeAutoObservable, observable } from "mobx"
 
-import { ICollectionProps, IInitFnOptions, TCollectionGenerics } from "./Collection.types"
+import { ICollectionProps, IInitFnOptions, ICollectionGenerics } from "./Collection.types"
 
-export class Collection<IGenerics extends TCollectionGenerics> {
+export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Model
   // ====================================================
@@ -24,13 +24,22 @@ export class Collection<IGenerics extends TCollectionGenerics> {
   // Public
   // ====================================================
   init = async (opts: IInitFnOptions = {}) => {
+    try {
+      await this.fetch({ shouldThrowError: true })
+      this.initialized = true
+    } catch (err) {
+      if (opts.shouldThrowError) {
+        throw err
+      }
+    }
+  }
+
+  fetch = async (opts: IInitFnOptions = {}) => {
     this.fetching = true
 
     try {
       const data = await this.props.fetchFn()
-
       this.data.replace(data)
-      this.initialized = true
     } catch (err) {
       this.fetchErr = err
 
@@ -40,5 +49,11 @@ export class Collection<IGenerics extends TCollectionGenerics> {
     } finally {
       this.fetching = false
     }
+  }
+
+  clear = () => {
+    this.data.clear()
+    this.initialized = false
+    this.fetchErr = undefined
   }
 }

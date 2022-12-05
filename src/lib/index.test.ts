@@ -1,5 +1,5 @@
 import { Collection } from "./"
 
 it("Runs without crashing", () => {
-  new Collection()
+  new Collection({ fetchFn: () => Promise.resolve([]) })
 })

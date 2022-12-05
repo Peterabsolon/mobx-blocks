@@ -1,12 +1,13 @@
-export interface TCollectionGenerics {
+export interface ICollectionGenerics {
   id: number | string
-  data: { id: TCollectionGenerics["id"] }
+  data: { id: ICollectionGenerics["id"] }
 }
 
-export interface ICollectionProps<IGenerics extends TCollectionGenerics> {
-  fetchFn: () => Promise<IGenerics["data"][]>
+export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
+  fetchFn: (params?: Record<string, any>) => Promise<IGenerics["data"][]>
 }
 
 export interface IInitFnOptions {
+  params?: Record<string, any>
   shouldThrowError?: boolean
 }

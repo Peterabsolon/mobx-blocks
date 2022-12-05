@@ -1,5 +1,5 @@
 {
-  "name": "@peterabsolon/ts-library-boilerplate-basic",
+  "name": "@peterabsolon/mobx-awesome-query",
   "version": "0.0.0-rc1",
   "description": "Something like react-query for people who like MobX or keeping their logic and view layers separate",
   "main": "build/index.js",
@@ -8,7 +8,7 @@
     "start": "webpack serve --config webpack.config.demo.js",
     "build": "webpack && tsc",
     "build:demo": "webpack --config webpack.config.demo.js",
-    "test": "jest --silent",
+    "test": "jest",
     "coverage": "npm run test -- --coverage",
     "prepare": "husky install",
     "format": "prettier --config .prettierrc --write 'src/**/*.{ts,tsx}'",

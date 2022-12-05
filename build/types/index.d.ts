@@ -1,4 +1,2 @@
-export declare class Collection {
-    constructor();
-    myMethod: () => boolean;
-}
+export * from "./Collection";
+export * from "./Collection.types";
