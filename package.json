@@ -1,7 +1,7 @@
 {
   "name": "@peterabsolon/ts-library-boilerplate-basic",
   "version": "0.0.0-rc1",
-  "description": "Typescript Minimal Starter Kit for building libraries",
+  "description": "Something like react-query for people who like MobX or keeping their logic and view layers separate",
   "main": "build/index.js",
   "types": "build/types/index.d.ts",
   "scripts": {
@@ -15,18 +15,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/hodgef/ts-library-boilerplate-basic"
+    "url": "https://github.com/Peterabsolon/mobx-awesome-query"
   },
-  "author": "Francisco Hodge <hello@franciscohodge.com> (https://github.com/hodgef)",
+  "author": "Peter Absolon <peterabsolon@yahoo.com.com> (https://github.com/Peterabsolon)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/hodgef/ts-library-boilerplate-basic/issues"
+    "url": "https://github.com/Peterabsolon/mobx-awesome-query/issues"
   },
-  "homepage": "https://github.com/hodgef/ts-library-boilerplate-basic",
+  "homepage": "https://github.com/Peterabsolon/mobx-awesome-query",
   "keywords": [
-    "library",
-    "starter",
-    "es6"
+    "mobx",
+    "state",
+    "query"
   ],
   "devDependencies": {
     "@babel/cli": "^7.18.10",
