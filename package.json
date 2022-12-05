@@ -10,7 +10,8 @@
     "build:demo": "webpack --config webpack.config.demo.js",
     "test": "jest --silent",
     "coverage": "npm run test -- --coverage",
-    "prepare": "npm run build",
+    "prepare": "husky install",
+    "format": "prettier --config .prettierrc --write 'src/**/*.{ts,tsx}'",
     "trypublish": "npm publish || true"
   },
   "repository": {
@@ -46,6 +47,7 @@
     "eslint": "^7.32.0",
     "file-loader": "^6.2.0",
     "html-webpack-plugin": "^5.5.0",
+    "husky": "^8.0.2",
     "jest": "^29.3.1",
     "mini-css-extract-plugin": "^2.7.1",
     "style-loader": "^3.3.1",
