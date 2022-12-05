@@ -1,6 +1,4 @@
-import "./index.css";
-declare class MyLibrary {
+export declare class Collection {
     constructor();
     myMethod: () => boolean;
 }
-export default MyLibrary;
