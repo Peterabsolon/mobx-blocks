@@ -31,7 +31,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Private
   // ====================================================
-  private handleSearch = async (opts: IInitFnOptions = {}) => {
+  private handleSearch = async (opts: IInitFnOptions) => {
     const { searchFn } = this.props
     if (!searchFn) {
       return
