@@ -84,9 +84,9 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  search = async (query: string) => {
+  search = async (query: string, opts: IInitFnOptions = {}) => {
     this.searchQuery = query
-    return this.handleSearch()
+    return this.handleSearch(opts)
   }
 
   clear = () => {

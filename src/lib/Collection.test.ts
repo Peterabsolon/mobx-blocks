@@ -6,6 +6,10 @@ interface IGenerics {
 }
 
 describe("Collection", () => {
+  afterEach(() => {
+    jest.useRealTimers()
+  })
+
   describe("init()", () => {
     it("fetches initial data, saves it to state", async () => {
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
@@ -58,7 +62,7 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("swallows error, saves it to state", async () => {
+    it("catches error, saves it to state", async () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
       const c = new Collection<IGenerics>({ fetchFn })
@@ -118,30 +122,74 @@ describe("Collection", () => {
       c.search("someOtherQuery")
       await searchFn()
       expect(c.data.length).toBe(1)
-
-      // revert to use real timers so other tests are unaffected
-      jest.useRealTimers()
     })
 
-    it("does nothing when searchFn not passed", () => {
+    it("does nothing when searchFn not passed", async () => {
+      jest.useFakeTimers()
+
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
       const c = new Collection<IGenerics>({ fetchFn })
 
-      c.search("someQuery")
+      const promise = c.search("someQuery")
+      jest.runAllTimers()
+      await promise
+
       expect(c.searching).toBe(false)
     })
 
     it("debounces search, uses last search query", async () => {
+      jest.useFakeTimers()
+
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
       const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, searchFn })
       c.search("someQuery")
       c.search("someOtherQuery")
-      await c.search("someThirdQuery")
+
+      const promise = c.search("someThirdQuery")
+      jest.runAllTimers()
+      await promise
 
       expect(searchFn).toBeCalledWith("someThirdQuery")
       expect(searchFn).toBeCalledTimes(1)
+    })
+
+    it("catches error, saves it to state", async () => {
+      jest.useFakeTimers()
+
+      const error = new Error("Foo")
+      const fetchFn = jest.fn(() => Promise.reject(error))
+      const searchFn = jest.fn(() => Promise.reject(error))
+
+      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+
+      try {
+        const promise = c.search("someQuery")
+        jest.runAllTimers()
+        await promise
+      } catch (e) {
+        expect(c.fetchErr).toBe(error)
+      }
+    })
+
+    it("rethrows error if opts.shouldThrowError is true", async () => {
+      jest.useFakeTimers()
+
+      const error = new Error("Foo")
+      const fetchFn = jest.fn(() => Promise.reject(error))
+      const searchFn = jest.fn(() => Promise.reject(error))
+
+      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+
+      try {
+        const promise = c.search("someQuery", { shouldThrowError: true })
+        jest.runAllTimers()
+        await promise
+      } catch (e) {
+        expect(e).toBe(error)
+        expect(c.fetchErr).toBe(error)
+      }
     })
   })
 
