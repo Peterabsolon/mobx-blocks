@@ -1,4 +1,5 @@
 import { makeAutoObservable, observable } from "mobx"
+import debounce from "debounce-promise"
 
 import { ICollectionProps, IInitFnOptions, ICollectionGenerics } from "./Collection.types"
 
@@ -7,9 +8,14 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // Model
   // ====================================================
   data = observable<IGenerics["data"]>([])
+
   fetching = false
   fetchErr?: unknown
+
   initialized = false
+
+  searchQuery = ""
+  searching = false
 
   // ====================================================
   // Constructor
@@ -18,6 +24,33 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     makeAutoObservable(this, {
       props: false,
     })
+
+    this.handleSearch = debounce(this.handleSearch, 500)
+  }
+
+  // ====================================================
+  // Private
+  // ====================================================
+  private handleSearch = async (opts: IInitFnOptions = {}) => {
+    const { searchFn } = this.props
+    if (!searchFn) {
+      return
+    }
+
+    this.searching = true
+
+    try {
+      const data = await searchFn(this.searchQuery)
+      this.data.replace(data)
+    } catch (err) {
+      this.fetchErr = err
+
+      if (opts.shouldThrowError) {
+        throw err
+      }
+    } finally {
+      this.searching = false
+    }
   }
 
   // ====================================================
@@ -39,7 +72,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
     try {
       const data = await this.props.fetchFn()
-      this.data.replace(data)
+      this.data.replace(this.data.concat(data))
     } catch (err) {
       this.fetchErr = err
 
@@ -49,6 +82,11 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     } finally {
       this.fetching = false
     }
+  }
+
+  search = async (query: string) => {
+    this.searchQuery = query
+    return this.handleSearch()
   }
 
   clear = () => {

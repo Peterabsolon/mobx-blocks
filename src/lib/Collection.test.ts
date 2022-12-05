@@ -45,7 +45,7 @@ describe("Collection", () => {
   })
 
   describe("fetch()", () => {
-    it("fetches data, saves it to state", async () => {
+    it("performs fetch API request, saves data to state", async () => {
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
@@ -81,6 +81,67 @@ describe("Collection", () => {
         expect(c.fetchErr).toBe(error)
         expect(e).toBe(error)
       }
+    })
+
+    it("appends new data to exisitng", async () => {
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      await c.fetch()
+      expect(c.data.length).toBe(1)
+
+      await c.fetch()
+      expect(c.data.length).toBe(2)
+    })
+  })
+
+  describe("search()", () => {
+    it("performs search API request, replaces results", async () => {
+      // use fake timers so workaround debounce
+      jest.useFakeTimers()
+
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+      const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      c.search("someQuery")
+
+      // Fast-forward time
+      jest.runAllTimers()
+      expect(c.searching).toBe(true)
+
+      await searchFn()
+      expect(c.data.length).toBe(1)
+      expect(c.searching).toBe(false)
+
+      // check data was replaced, not appended
+      c.search("someOtherQuery")
+      await searchFn()
+      expect(c.data.length).toBe(1)
+
+      // revert to use real timers so other tests are unaffected
+      jest.useRealTimers()
+    })
+
+    it("does nothing when searchFn not passed", () => {
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+      const c = new Collection<IGenerics>({ fetchFn })
+
+      c.search("someQuery")
+      expect(c.searching).toBe(false)
+    })
+
+    it("debounces search, uses last search query", async () => {
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+      const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      c.search("someQuery")
+      c.search("someOtherQuery")
+      await c.search("someThirdQuery")
+
+      expect(searchFn).toBeCalledWith("someThirdQuery")
+      expect(searchFn).toBeCalledTimes(1)
     })
   })
 

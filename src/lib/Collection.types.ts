@@ -5,6 +5,7 @@ export interface ICollectionGenerics {
 
 export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
   fetchFn: (params?: Record<string, any>) => Promise<IGenerics["data"][]>
+  searchFn?: (query: string, params?: Record<string, any>) => Promise<IGenerics["data"][]>
 }
 
 export interface IInitFnOptions {

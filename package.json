@@ -78,5 +78,8 @@
       "jsx",
       "node"
     ]
+  },
+  "dependencies": {
+    "debounce-promise": "^3.1.2"
   }
 }
