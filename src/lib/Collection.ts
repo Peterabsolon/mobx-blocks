@@ -39,7 +39,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // Private
   // ====================================================
   handleSearch = async (opts: { shouldThrowError?: boolean }) => {
-    const { searchFn } = this.props
+    const { searchFn, errorHandlerFn } = this.props
     if (!searchFn) {
       return
     }
@@ -51,6 +51,10 @@ export class Collection<IGenerics extends ICollectionGenerics> {
       this.data.replace(data)
     } catch (err) {
       this.fetchErr = err
+
+      if (errorHandlerFn) {
+        errorHandlerFn(err)
+      }
 
       if (opts.shouldThrowError) {
         throw err

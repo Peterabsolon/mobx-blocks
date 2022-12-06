@@ -103,6 +103,17 @@ describe("Collection", () => {
       }
     })
 
+    it("calls props.errorHandlerFn() if passed on error", async () => {
+      const error = new Error("Foo")
+      const fetchFn = jest.fn(() => Promise.reject(error))
+      const errorHandlerFn = jest.fn()
+
+      const c = new Collection<IGenerics>({ fetchFn, errorHandlerFn })
+      await c.fetch()
+
+      expect(errorHandlerFn).toBeCalledWith(error)
+    })
+
     it("appends new data to exisitng", async () => {
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
@@ -206,6 +217,18 @@ describe("Collection", () => {
         expect(e).toBe(error)
         expect(c.fetchErr).toBe(error)
       }
+    })
+
+    it("calls props.errorHandlerFn() if passed on error", async () => {
+      const error = new Error("Foo")
+      const searchFn = jest.fn(() => Promise.reject(error))
+      const fetchFn = jest.fn(() => Promise.reject(error))
+      const errorHandlerFn = jest.fn()
+
+      const c = new Collection<IGenerics>({ fetchFn, searchFn, errorHandlerFn })
+      await c.search("someQuery")
+
+      expect(errorHandlerFn).toBeCalledWith(error)
     })
   })
 
