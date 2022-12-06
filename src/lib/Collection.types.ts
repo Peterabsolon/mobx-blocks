@@ -1,17 +1,16 @@
 export interface ICollectionGenerics {
   id: number | string
   data: { id: ICollectionGenerics["id"] }
+  fetchParams: Record<string, any>
 }
 
-export type TFetchParams = Record<string, any>
-
 export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
-  fetchFn: (params?: TFetchParams) => Promise<IGenerics["data"][]>
-  searchFn?: (query: string, params?: TFetchParams) => Promise<IGenerics["data"][]>
+  fetchFn: (params?: IGenerics["fetchParams"]) => Promise<IGenerics["data"][]>
+  searchFn?: (query: string, params?: IGenerics["fetchParams"]) => Promise<IGenerics["data"][]>
   errorHandlerFn?: (err: unknown) => any
 }
 
-export interface IFetchFnOptions {
+export interface IFetchFnOptions<TFetchParams> {
   params?: TFetchParams
   shouldThrowError?: boolean
 }

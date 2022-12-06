@@ -13,16 +13,15 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // Model
   // ====================================================
   data = observable<IGenerics["data"]>([])
+  initialized = false
 
   fetching = false
   fetchErr?: unknown
-
-  initialized = false
+  fetchParams = observable<IGenerics["fetchParams"]>({})
 
   searchQuery = ""
   searching = false
-
-  queryParams = observable<Record<string, any>>({})
+  searchErr?: unknown
 
   // ====================================================
   // Constructor
@@ -50,7 +49,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
       const data = await searchFn(this.searchQuery)
       this.data.replace(data)
     } catch (err) {
-      this.fetchErr = err
+      this.searchErr = err
 
       if (errorHandlerFn) {
         errorHandlerFn(err)
@@ -67,7 +66,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Public
   // ====================================================
-  init = async (opts: IFetchFnOptions = {}) => {
+  init = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
     try {
       await this.fetch({ shouldThrowError: true })
       this.initialized = true
@@ -78,7 +77,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  fetch = async (opts: IFetchFnOptions = {}) => {
+  fetch = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
     const { fetchFn, errorHandlerFn } = this.props
 
     this.fetching = true
@@ -101,26 +100,40 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  search = async (query: string, opts: IFetchFnOptions = {}) => {
-    this.searchQuery = query
-    return this.handleSearch(opts)
+  setFetchParam = (key: keyof IGenerics["fetchParams"], value: any) => {
+    this.fetchParams[key] = value
   }
 
-  setQueryParam = (key: string, value: any) => {
-    this.queryParams[key] = value
+  clearFetchParam = (key: keyof IGenerics["fetchParams"]) => {
+    delete this.fetchParams[key]
   }
 
-  setQueryParams = async (params: Record<string, any>, opts: ISetQueryParamsFnOptions = {}) => {
-    this.queryParams = observable(opts?.merge ? { ...this.queryParams, ...params } : params)
+  setFetchParams = async (
+    params: IGenerics["fetchParams"],
+    opts: ISetQueryParamsFnOptions = {}
+  ) => {
+    this.fetchParams = observable(opts?.merge ? { ...this.fetchParams, ...params } : params)
 
     if (opts.fetch) {
-      await this.fetch({ params: this.queryParams })
+      await this.fetch({ params: this.fetchParams })
     }
+  }
+
+  search = async (query: string, opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
+    this.searchQuery = query
+    return this.handleSearch(opts)
   }
 
   clear = () => {
     this.data.clear()
     this.initialized = false
+
+    this.fetching = false
     this.fetchErr = undefined
+    this.fetchParams = observable<Record<string, any>>({})
+
+    this.searchQuery = ""
+    this.searching = false
+    this.searchErr = undefined
   }
 }
