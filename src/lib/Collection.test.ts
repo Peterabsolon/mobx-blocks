@@ -27,11 +27,8 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const c = new Collection<IGenerics>({ fetchFn })
 
-      try {
-        await c.init()
-      } catch (e) {
-        expect(c.fetchErr).toBe(error)
-      }
+      await c.init()
+      expect(c.fetchErr).toBe(error)
     })
 
     it("rethrows error if opts.shouldThrowError is true", async () => {
@@ -45,6 +42,17 @@ describe("Collection", () => {
         expect(c.fetchErr).toBe(error)
         expect(e).toBe(error)
       }
+    })
+
+    it("calls props.errorHandlerFn() if passed on error", async () => {
+      const error = new Error("Foo")
+      const fetchFn = jest.fn(() => Promise.reject(error))
+      const errorHandlerFn = jest.fn()
+
+      const c = new Collection<IGenerics>({ fetchFn, errorHandlerFn })
+      await c.init()
+
+      expect(errorHandlerFn).toBeCalledWith(error)
     })
   })
 
@@ -62,16 +70,24 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
+    it("performs fetch API request with passed in query params", async () => {
+      const params = { foo: "bar" }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      await c.fetch({ params })
+
+      expect(fetchFn).toBeCalledWith(params)
+    })
+
     it("catches error, saves it to state", async () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
-      const c = new Collection<IGenerics>({ fetchFn })
 
-      try {
-        await c.fetch()
-      } catch (e) {
-        expect(c.fetchErr).toBe(error)
-      }
+      const c = new Collection<IGenerics>({ fetchFn })
+      await c.fetch()
+
+      expect(c.fetchErr).toBe(error)
     })
 
     it("rethrows error if opts.shouldThrowError is true", async () => {
@@ -190,6 +206,56 @@ describe("Collection", () => {
         expect(e).toBe(error)
         expect(c.fetchErr).toBe(error)
       }
+    })
+  })
+
+  describe("setQueryParam()", () => {
+    it("saves param to state", async () => {
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.setQueryParam("foo", "bar")
+
+      expect(c.queryParams).toEqual({ foo: "bar" })
+    })
+  })
+
+  describe("setQueryParams()", () => {
+    it("saves params to state, clears other state", async () => {
+      const params = { foo: "foo", bar: 2, baz: { qux: false } }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.setQueryParams(params)
+      expect(c.queryParams).toEqual(params)
+
+      const paramsNew = { dog: "banana" }
+      c.setQueryParams(paramsNew)
+      expect(c.queryParams).toEqual(paramsNew)
+    })
+
+    it("merges params to state if opts.merge is true", () => {
+      const opts = { merge: true }
+      const params = { foo: "foo", bar: 2, baz: { qux: false } }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.setQueryParams(params, opts)
+      expect(c.queryParams).toEqual(params)
+
+      const paramsNew = { dog: "banana" }
+      c.setQueryParams(paramsNew, opts)
+      expect(c.queryParams).toEqual({ ...params, ...paramsNew })
+    })
+
+    it("performs fetch request with new params if opts.fetch is true", () => {
+      const opts = { fetch: true }
+      const params = { foo: "bar" }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.setQueryParams(params, opts)
+      expect(fetchFn).toBeCalledWith(params)
     })
   })
 

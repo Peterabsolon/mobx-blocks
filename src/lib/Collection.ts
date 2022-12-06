@@ -1,7 +1,12 @@
 import { makeAutoObservable, observable } from "mobx"
 import debounce from "debounce-promise"
 
-import { ICollectionProps, IInitFnOptions, ICollectionGenerics } from "./Collection.types"
+import {
+  ICollectionGenerics,
+  ICollectionProps,
+  IFetchFnOptions,
+  ISetQueryParamsFnOptions,
+} from "./Collection.types"
 
 export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
@@ -17,6 +22,8 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   searchQuery = ""
   searching = false
 
+  queryParams = observable<Record<string, any>>({})
+
   // ====================================================
   // Constructor
   // ====================================================
@@ -31,7 +38,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Private
   // ====================================================
-  private handleSearch = async (opts: IInitFnOptions) => {
+  handleSearch = async (opts: { shouldThrowError?: boolean }) => {
     const { searchFn } = this.props
     if (!searchFn) {
       return
@@ -56,7 +63,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Public
   // ====================================================
-  init = async (opts: IInitFnOptions = {}) => {
+  init = async (opts: IFetchFnOptions = {}) => {
     try {
       await this.fetch({ shouldThrowError: true })
       this.initialized = true
@@ -67,14 +74,20 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  fetch = async (opts: IInitFnOptions = {}) => {
+  fetch = async (opts: IFetchFnOptions = {}) => {
+    const { fetchFn, errorHandlerFn } = this.props
+
     this.fetching = true
 
     try {
-      const data = await this.props.fetchFn()
+      const data = await fetchFn(opts.params)
       this.data.replace(this.data.concat(data))
     } catch (err) {
       this.fetchErr = err
+
+      if (errorHandlerFn) {
+        errorHandlerFn(err)
+      }
 
       if (opts.shouldThrowError) {
         throw err
@@ -84,9 +97,21 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  search = async (query: string, opts: IInitFnOptions = {}) => {
+  search = async (query: string, opts: IFetchFnOptions = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
+  }
+
+  setQueryParam = (key: string, value: any) => {
+    this.queryParams[key] = value
+  }
+
+  setQueryParams = async (params: Record<string, any>, opts: ISetQueryParamsFnOptions = {}) => {
+    this.queryParams = observable(opts?.merge ? { ...this.queryParams, ...params } : params)
+
+    if (opts.fetch) {
+      await this.fetch({ params: this.queryParams })
+    }
   }
 
   clear = () => {
