@@ -87,6 +87,18 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith(params)
     })
 
+    it("synchronizes query params to URL if props.syncParamsToUrl", async () => {
+      const replaceStateSpy = jest.spyOn(window.history, "replaceState")
+
+      const params = { foo: "bar", bar: 2 }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
+      await c.fetch({ params })
+
+      expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?bar=2&foo=bar")
+    })
+
     it("catches error, saves it to state", async () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
@@ -248,6 +260,18 @@ describe("Collection", () => {
 
       expect(c.fetchParams).toEqual({ foo: "bar" })
     })
+
+    // TODO
+    // it("synchronizes param to URL if props.syncParamsToUrl", async () => {
+    //   const replaceStateSpy = jest.spyOn(window.history, "replaceState")
+
+    //   const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+    //   const c = new Collection<IGenerics>({ fetchFn })
+    //   c.setFetchParam("foo", "bar")
+
+    //   expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?bar=2&foo=bar")
+    // })
   })
 
   describe("setFetchParams()", () => {
@@ -285,11 +309,24 @@ describe("Collection", () => {
 
       const c = new Collection<IGenerics>({ fetchFn })
       c.setFetchParams(params, opts)
+
       expect(fetchFn).toBeCalledWith(params)
+    })
+
+    it("synchronizes param to URL if opts.syncToUrl", async () => {
+      const replaceStateSpy = jest.spyOn(window.history, "replaceState")
+
+      const params = { foo: "bar" }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.setFetchParams(params, { syncToUrl: true })
+
+      expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?foo=bar")
     })
   })
 
-  describe("clearFetchParam", () => {
+  describe("clearFetchParam()", () => {
     it("clears specific query param", () => {
       const params = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()

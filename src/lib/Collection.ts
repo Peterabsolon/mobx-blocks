@@ -1,5 +1,6 @@
 import { makeAutoObservable, observable } from "mobx"
 import debounce from "debounce-promise"
+import qs from "query-string"
 
 import {
   ICollectionGenerics,
@@ -80,6 +81,10 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   fetch = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
     const { fetchFn, errorHandlerFn } = this.props
 
+    if (opts.params) {
+      this.setFetchParams(opts.params)
+    }
+
     this.fetching = true
 
     try {
@@ -116,6 +121,10 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
     if (opts.fetch) {
       await this.fetch({ params: this.fetchParams })
+    }
+
+    if (opts.syncToUrl || this.props.syncParamsToUrl) {
+      history.replaceState("", "", `${location.pathname}?${qs.stringify(this.fetchParams)}`)
     }
   }
 

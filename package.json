@@ -38,6 +38,7 @@
     "@babel/preset-env": "^7.20.2",
     "@types/debounce-promise": "^3.1.5",
     "@types/jest": "^29.2.4",
+    "@types/query-string": "^6.3.0",
     "@typescript-eslint/eslint-plugin": "^4.33.0",
     "@typescript-eslint/parser": "^4.33.0",
     "babel-eslint": "^10.1.0",
@@ -63,6 +64,7 @@
     "mobx": "^6.0.0"
   },
   "jest": {
+    "testEnvironment": "jsdom",
     "moduleNameMapper": {
       "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/scripts/testMock.js",
       "\\.(css|less)$": "<rootDir>/scripts/testMock.js"
@@ -82,6 +84,8 @@
   },
   "dependencies": {
     "debounce-promise": "^3.1.2",
-    "lodash": "^4.17.21"
+    "jest-environment-jsdom": "^29.3.1",
+    "lodash": "^4.17.21",
+    "query-string": "^7.1.3"
   }
 }
