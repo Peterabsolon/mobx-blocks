@@ -315,8 +315,6 @@ describe("Collection", () => {
       expect(window.location.search).toBe("?bar=2&foo=bar")
 
       c.setFetchParams({ foo: "banana", bar: 5 })
-      await sleep(0)
-
       expect(window.location.search).toBe("?bar=5&foo=banana")
 
       c.clearFetchParam("foo")
@@ -361,5 +359,3 @@ describe("Collection", () => {
     })
   })
 })
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
