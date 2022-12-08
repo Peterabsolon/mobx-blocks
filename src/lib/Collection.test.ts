@@ -32,7 +32,7 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("performs fetch API request with filters passed as argument", async () => {
+    it("performs fetch API request with filters passed as object", async () => {
       const filters = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
@@ -40,6 +40,16 @@ describe("Collection", () => {
       await c.fetch({ filters })
 
       expect(fetchFn).toBeCalledWith(filters)
+    })
+
+    it("performs fetch API request with filters passed as string", async () => {
+      const query = "?foo=bar"
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      await c.fetch({ query })
+
+      expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
 
     it("performs fetch API request with default filters", async () => {
@@ -353,7 +363,6 @@ describe("Collection", () => {
       expect(c.searchErr).toBe(error)
 
       c.resetState()
-
       expect(c.fetchErr).toBe(undefined)
       expect(c.searchErr).toBe(undefined)
     })

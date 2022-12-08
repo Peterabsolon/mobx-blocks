@@ -52,6 +52,12 @@ export interface IFetchFnOptions<TFilters> {
   filters?: TFilters
 
   /**
+   * The query to perform the API request with.
+   * Gets parsed into params using 'query-string'
+   */
+  query?: string
+
+  /**
    * If true, the existing params are cleared and only the passed in ones are used
    */
   clearFilters?: boolean
