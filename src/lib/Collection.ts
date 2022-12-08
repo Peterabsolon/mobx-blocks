@@ -17,28 +17,30 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   initialized = false
 
   fetching = false
-  fetchErr?: unknown
   fetchParams = observable<IGenerics["fetchParams"]>({})
+  fetchErr?: unknown
 
-  searchQuery = ""
   searching = false
+  searchQuery = ""
   searchErr?: unknown
 
   // ====================================================
   // Constructor
   // ====================================================
   constructor(public props: ICollectionProps<IGenerics>) {
-    makeAutoObservable(this, {
-      props: false,
-    })
+    makeAutoObservable(this, { props: false })
 
     this.handleSearch = debounce(this.handleSearch, 500)
+
+    if (props.defaultQueryParams) {
+      this.setFetchParams(props.defaultQueryParams)
+    }
   }
 
   // ====================================================
   // Private
   // ====================================================
-  handleSearch = async (opts: { shouldThrowError?: boolean }) => {
+  private handleSearch = async (opts: { shouldThrowError?: boolean }) => {
     const { searchFn, errorHandlerFn } = this.props
     if (!searchFn) {
       return
@@ -82,13 +84,13 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     const { fetchFn, errorHandlerFn } = this.props
 
     if (opts.params) {
-      this.setFetchParams(opts.params)
+      this.setFetchParams(opts.params, { merge: true })
     }
 
     this.fetching = true
 
     try {
-      const data = await fetchFn(opts.params)
+      const data = await fetchFn(this.fetchParams)
       this.data.replace(this.data.concat(data))
     } catch (err) {
       this.fetchErr = err
@@ -105,10 +107,6 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     }
   }
 
-  setFetchParam = (key: keyof IGenerics["fetchParams"], value: any) => {
-    this.fetchParams[key] = value
-  }
-
   clearFetchParam = (key: keyof IGenerics["fetchParams"]) => {
     delete this.fetchParams[key]
   }
@@ -117,7 +115,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     params: IGenerics["fetchParams"],
     opts: ISetQueryParamsFnOptions = {}
   ) => {
-    this.fetchParams = observable(opts?.merge ? { ...this.fetchParams, ...params } : params)
+    this.fetchParams = observable(opts.merge ? { ...this.fetchParams, ...params } : params)
 
     if (opts.fetch) {
       await this.fetch({ params: this.fetchParams })

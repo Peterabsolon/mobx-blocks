@@ -10,6 +10,7 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
   errorHandlerFn?: (err: unknown) => any
 
   syncParamsToUrl?: boolean
+  defaultQueryParams?: IGenerics["fetchParams"]
 }
 
 export interface IFetchFnOptions<TFetchParams> {

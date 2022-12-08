@@ -77,7 +77,7 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("performs fetch API request with passed in query params", async () => {
+    it("performs fetch API request with query params passed as argument", async () => {
       const params = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
@@ -85,6 +85,27 @@ describe("Collection", () => {
       await c.fetch({ params })
 
       expect(fetchFn).toBeCalledWith(params)
+    })
+
+    it("performs fetch API request with default query params", async () => {
+      const params = { foo: "bar" }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams: params })
+      await c.fetch()
+
+      expect(fetchFn).toBeCalledWith(params)
+    })
+
+    it("performs fetch API request with both default query params and params passed as argument", async () => {
+      const defaultQueryParams = { foo: "foo" }
+      const params = { bar: 2 }
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams })
+      await c.fetch({ params })
+
+      expect(fetchFn).toBeCalledWith({ ...defaultQueryParams, ...params })
     })
 
     it("synchronizes query params to URL if props.syncParamsToUrl", async () => {
@@ -249,29 +270,6 @@ describe("Collection", () => {
 
       expect(errorHandlerFn).toBeCalledWith(error)
     })
-  })
-
-  describe("setFetchParam()", () => {
-    it("saves param to state", async () => {
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
-
-      const c = new Collection<IGenerics>({ fetchFn })
-      c.setFetchParam("foo", "bar")
-
-      expect(c.fetchParams).toEqual({ foo: "bar" })
-    })
-
-    // TODO
-    // it("synchronizes param to URL if props.syncParamsToUrl", async () => {
-    //   const replaceStateSpy = jest.spyOn(window.history, "replaceState")
-
-    //   const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
-
-    //   const c = new Collection<IGenerics>({ fetchFn })
-    //   c.setFetchParam("foo", "bar")
-
-    //   expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?bar=2&foo=bar")
-    // })
   })
 
   describe("setFetchParams()", () => {
