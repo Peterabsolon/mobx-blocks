@@ -1,13 +1,8 @@
-import { makeAutoObservable, observable } from "mobx"
+import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
-import {
-  ICollectionGenerics,
-  ICollectionProps,
-  IFetchFnOptions,
-  ISetQueryParamsFnOptions,
-} from "./Collection.types"
+import { ICollectionGenerics, ICollectionProps, IFetchFnOptions } from "./Collection.types"
 
 export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
@@ -18,6 +13,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
   fetching = false
   fetchParams = observable<IGenerics["fetchParams"]>({})
+  fetchParamsDefaults = observable<IGenerics["fetchParams"]>({})
   fetchErr?: unknown
 
   searching = false
@@ -33,13 +29,22 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.handleSearch = debounce(this.handleSearch, 500)
 
     if (props.defaultQueryParams) {
-      this.setFetchParams(props.defaultQueryParams)
+      this.fetchParams = observable(props.defaultQueryParams)
+      this.fetchParamsDefaults = observable(props.defaultQueryParams)
+    }
+
+    if (props.syncParamsToUrl) {
+      reaction(() => this.fetchParams, this.syncFetchParamsToUrl)
     }
   }
 
   // ====================================================
   // Private
   // ====================================================
+  private syncFetchParamsToUrl = () => {
+    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.fetchParams)}`)
+  }
+
   private handleSearch = async (opts: { shouldThrowError?: boolean }) => {
     const { searchFn, errorHandlerFn } = this.props
     if (!searchFn) {
@@ -69,22 +74,14 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Public
   // ====================================================
-  init = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
-    try {
-      await this.fetch({ shouldThrowError: true })
-      this.initialized = true
-    } catch (err) {
-      if (opts.shouldThrowError) {
-        throw err
-      }
-    }
-  }
-
+  /**
+   * Perform fetch API request
+   */
   fetch = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
     const { fetchFn, errorHandlerFn } = this.props
 
     if (opts.params) {
-      this.setFetchParams(opts.params, { merge: true })
+      opts.clearParams ? this.setFetchParams(opts.params) : this.mergeFetchParams(opts.params)
     }
 
     this.fetching = true
@@ -104,43 +101,66 @@ export class Collection<IGenerics extends ICollectionGenerics> {
       }
     } finally {
       this.fetching = false
+      this.initialized = true
     }
   }
 
+  /**
+   * Set fetch params
+   */
+  setFetchParams = async (params: IGenerics["fetchParams"]) => {
+    this.fetchParams = observable(params)
+  }
+
+  /**
+   * Merge fetch params
+   */
+  mergeFetchParams = async (params: IGenerics["fetchParams"]) => {
+    this.fetchParams = observable({ ...this.fetchParams, ...params })
+  }
+
+  /**
+   * Clear all fetch params from state
+   */
+  clearFetchParams = () => {
+    this.fetchParams = observable<Record<string, any>>({})
+  }
+
+  /**
+   * Clear specific fetch param from state
+   */
   clearFetchParam = (key: keyof IGenerics["fetchParams"]) => {
     delete this.fetchParams[key]
   }
 
-  setFetchParams = async (
-    params: IGenerics["fetchParams"],
-    opts: ISetQueryParamsFnOptions = {}
-  ) => {
-    this.fetchParams = observable(opts.merge ? { ...this.fetchParams, ...params } : params)
-
-    if (opts.fetch) {
-      await this.fetch({ params: this.fetchParams })
-    }
-
-    if (opts.syncToUrl || this.props.syncParamsToUrl) {
-      history.replaceState("", "", `${location.pathname}?${qs.stringify(this.fetchParams)}`)
-    }
+  /**
+   * Reset fetch params to defaults (passed in the constructor)
+   */
+  resetFetchParams = () => {
+    this.setFetchParams(this.fetchParamsDefaults)
   }
 
+  /**
+   * Perform debounced search using search query and fetch params
+   */
   search = async (query: string, opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
   }
 
-  clear = () => {
+  /**
+   * Reset all state to initial
+   */
+  resetState = () => {
     this.data.clear()
     this.initialized = false
 
     this.fetching = false
-    this.fetchErr = undefined
     this.fetchParams = observable<Record<string, any>>({})
+    this.fetchErr = undefined
 
-    this.searchQuery = ""
     this.searching = false
+    this.searchQuery = ""
     this.searchErr = undefined
   }
 }
