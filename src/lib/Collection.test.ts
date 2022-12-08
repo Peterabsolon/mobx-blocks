@@ -1,3 +1,4 @@
+import { toJS } from "mobx"
 import { Collection } from "./Collection"
 
 interface IFetchParams {
@@ -17,7 +18,7 @@ describe("Collection", () => {
     jest.useRealTimers()
   })
 
-  describe("fetch()", () => {
+  describe("fetch", () => {
     it("performs fetch API request, saves data to state", async () => {
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
@@ -131,7 +132,7 @@ describe("Collection", () => {
     })
   })
 
-  describe("search()", () => {
+  describe("search", () => {
     it("performs search API request, replaces results", async () => {
       // use fake timers so workaround debounce
       jest.useFakeTimers()
@@ -237,7 +238,7 @@ describe("Collection", () => {
     })
   })
 
-  describe("setFetchParams()", () => {
+  describe("setFetchParams", () => {
     it("saves params to state, clears other state", async () => {
       const params = { foo: "foo", bar: 2, baz: { qux: false } }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
@@ -252,7 +253,7 @@ describe("Collection", () => {
     })
   })
 
-  describe("clearFetchParam()", () => {
+  describe("clearFetchParam", () => {
     it("clears specific query param", () => {
       const params = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
@@ -261,11 +262,11 @@ describe("Collection", () => {
       c.setFetchParams(params)
       c.clearFetchParam("foo")
 
-      expect(c.fetchParams).toEqual({ bar: 3 })
+      expect(toJS(c.fetchParams)).toEqual({ bar: 3 })
     })
   })
 
-  describe("clearFetchParams()", () => {
+  describe("clearFetchParams", () => {
     it("clears all query params", () => {
       const params = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
@@ -291,7 +292,32 @@ describe("Collection", () => {
     })
   })
 
-  describe("resetState()", () => {
+  describe("syncParamsToUrl", () => {
+    it("synchronizes query params to URL on change when props.syncParamsToUrl", async () => {
+      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+
+      const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
+
+      await c.fetch({ params: { foo: "bar" } })
+      expect(window.location.search).toBe("?foo=bar")
+
+      c.mergeFetchParams({ bar: 2 })
+      expect(window.location.search).toBe("?bar=2&foo=bar")
+
+      c.setFetchParams({ foo: "banana", bar: 5 })
+      await sleep(0)
+
+      expect(window.location.search).toBe("?bar=5&foo=banana")
+
+      c.clearFetchParam("foo")
+      expect(window.location.search).toBe("?bar=5")
+
+      c.clearFetchParams()
+      expect(window.location.search).toBe("")
+    })
+  })
+
+  describe("resetState", () => {
     it("clears data and related state", async () => {
       const params = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
@@ -325,3 +351,5 @@ describe("Collection", () => {
     })
   })
 })
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))

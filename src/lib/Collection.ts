@@ -12,8 +12,8 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   initialized = false
 
   fetching = false
-  fetchParams = observable<IGenerics["fetchParams"]>({})
-  fetchParamsDefaults = observable<IGenerics["fetchParams"]>({})
+  fetchParamsMap = observable(new Map())
+  fetchParamsMapDefaults = observable(new Map())
   fetchErr?: unknown
 
   searching = false
@@ -29,13 +29,20 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.handleSearch = debounce(this.handleSearch, 500)
 
     if (props.defaultQueryParams) {
-      this.fetchParams = observable(props.defaultQueryParams)
-      this.fetchParamsDefaults = observable(props.defaultQueryParams)
+      this.fetchParamsMap.replace(props.defaultQueryParams)
+      this.fetchParamsMapDefaults.replace(props.defaultQueryParams)
     }
 
     if (props.syncParamsToUrl) {
-      reaction(() => this.fetchParams, this.syncFetchParamsToUrl)
+      reaction(() => this.fetchParamsMap.keys(), this.syncFetchParamsToUrl)
     }
+  }
+
+  // ====================================================
+  // Computed
+  // ====================================================
+  get fetchParams(): IGenerics["fetchParams"] {
+    return Object.fromEntries(this.fetchParamsMap)
   }
 
   // ====================================================
@@ -109,35 +116,36 @@ export class Collection<IGenerics extends ICollectionGenerics> {
    * Set fetch params
    */
   setFetchParams = async (params: IGenerics["fetchParams"]) => {
-    this.fetchParams = observable(params)
+    this.fetchParamsMap.clear()
+    this.fetchParamsMap.replace(params)
   }
 
   /**
    * Merge fetch params
    */
   mergeFetchParams = async (params: IGenerics["fetchParams"]) => {
-    this.fetchParams = observable({ ...this.fetchParams, ...params })
+    this.fetchParamsMap.merge(params)
   }
 
   /**
    * Clear all fetch params from state
    */
   clearFetchParams = () => {
-    this.fetchParams = observable<Record<string, any>>({})
+    this.fetchParamsMap.clear()
   }
 
   /**
    * Clear specific fetch param from state
    */
   clearFetchParam = (key: keyof IGenerics["fetchParams"]) => {
-    delete this.fetchParams[key]
+    this.fetchParamsMap.delete(key.toString())
   }
 
   /**
    * Reset fetch params to defaults (passed in the constructor)
    */
   resetFetchParams = () => {
-    this.setFetchParams(this.fetchParamsDefaults)
+    this.fetchParamsMap.replace(this.fetchParamsMapDefaults)
   }
 
   /**
@@ -156,7 +164,8 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.initialized = false
 
     this.fetching = false
-    this.fetchParams = observable<Record<string, any>>({})
+    this.fetchParamsMap.clear()
+    this.fetchParamsMapDefaults.clear()
     this.fetchErr = undefined
 
     this.searching = false
