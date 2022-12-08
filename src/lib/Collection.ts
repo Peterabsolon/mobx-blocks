@@ -13,7 +13,6 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
   fetching = false
   fetchParamsMap = observable(new Map())
-  fetchParamsMapDefaults = observable(new Map())
   fetchErr?: unknown
 
   searching = false
@@ -30,7 +29,6 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
     if (props.defaultQueryParams) {
       this.fetchParamsMap.replace(props.defaultQueryParams)
-      this.fetchParamsMapDefaults.replace(props.defaultQueryParams)
     }
 
     if (props.syncParamsToUrl) {
@@ -145,7 +143,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
    * Reset fetch params to defaults (passed in the constructor)
    */
   resetFetchParams = () => {
-    this.fetchParamsMap.replace(this.fetchParamsMapDefaults)
+    this.fetchParamsMap.replace(this.props.defaultQueryParams || {})
   }
 
   /**
@@ -165,7 +163,6 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
     this.fetching = false
     this.fetchParamsMap.clear()
-    this.fetchParamsMapDefaults.clear()
     this.fetchErr = undefined
 
     this.searching = false

@@ -290,6 +290,16 @@ describe("Collection", () => {
 
       expect(c.fetchParams).toEqual(defaultQueryParams)
     })
+
+    it("clears fetch params if not defaults passed", () => {
+      const fetchFn = jest.fn()
+
+      const c = new Collection<IGenerics>({ fetchFn })
+      c.mergeFetchParams({ baz: { qux: false } })
+      c.resetFetchParams()
+
+      expect(c.fetchParams).toEqual({})
+    })
   })
 
   describe("syncParamsToUrl", () => {
