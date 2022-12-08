@@ -1,7 +1,7 @@
 import { toJS } from "mobx"
 import { Collection } from "./Collection"
 
-interface IFetchParams {
+interface IFilters {
   foo?: string
   bar?: number
   baz?: { qux: boolean }
@@ -10,7 +10,7 @@ interface IFetchParams {
 interface IGenerics {
   id: string
   data: { id: string }
-  fetchParams: IFetchParams
+  filters: IFilters
 }
 
 describe("Collection", () => {
@@ -32,56 +32,56 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("performs fetch API request with query params passed as argument", async () => {
-      const params = { foo: "bar" }
+    it("performs fetch API request with filters passed as argument", async () => {
+      const filters = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
-      await c.fetch({ params })
+      await c.fetch({ filters })
 
-      expect(fetchFn).toBeCalledWith(params)
+      expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("performs fetch API request with default query params", async () => {
-      const params = { foo: "bar" }
+    it("performs fetch API request with default filters", async () => {
+      const filters = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams: params })
+      const c = new Collection<IGenerics>({ fetchFn, defaultFilters: filters })
       await c.fetch()
 
-      expect(fetchFn).toBeCalledWith(params)
+      expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("performs fetch API request with both default query params and params passed as argument", async () => {
-      const defaultQueryParams = { foo: "foo" }
-      const params = { bar: 2 }
+    it("performs fetch API request with both default filters and filters passed as argument", async () => {
+      const defaultFilters = { foo: "foo" }
+      const filters = { bar: 2 }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams })
-      await c.fetch({ params })
+      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
+      await c.fetch({ filters })
 
-      expect(fetchFn).toBeCalledWith({ ...defaultQueryParams, ...params })
+      expect(fetchFn).toBeCalledWith({ ...defaultFilters, ...filters })
     })
 
-    it("performs fetch API request with query params passed as argument only when opts.clearParams is true", async () => {
-      const defaultQueryParams = { foo: "foo" }
-      const params = { bar: 2 }
+    it("performs fetch API request with filters passed as argument only when opts.clearFilters is true", async () => {
+      const defaultFilters = { foo: "foo" }
+      const filters = { bar: 2 }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams })
-      await c.fetch({ params, clearParams: true })
+      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
+      await c.fetch({ filters, clearFilters: true })
 
-      expect(fetchFn).toBeCalledWith(params)
+      expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("synchronizes query params to URL if props.syncParamsToUrl", async () => {
+    it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
       const replaceStateSpy = jest.spyOn(window.history, "replaceState")
 
-      const params = { foo: "bar", bar: 2 }
+      const filters = { foo: "bar", bar: 2 }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
-      await c.fetch({ params })
+      await c.fetch({ filters })
 
       expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?bar=2&foo=bar")
     })
@@ -239,76 +239,76 @@ describe("Collection", () => {
   })
 
   describe("setFetchParams", () => {
-    it("saves params to state, clears other state", async () => {
-      const params = { foo: "foo", bar: 2, baz: { qux: false } }
+    it("saves filters to state, clears other state", async () => {
+      const filters = { foo: "foo", bar: 2, baz: { qux: false } }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
-      c.setFetchParams(params)
-      expect(c.fetchParams).toEqual(params)
+      c.setFetchParams(filters)
+      expect(c.filters).toEqual(filters)
 
-      const paramsNew = { foo: "banana" }
-      c.setFetchParams(paramsNew)
-      expect(c.fetchParams).toEqual(paramsNew)
+      const filtersNew = { foo: "banana" }
+      c.setFetchParams(filtersNew)
+      expect(c.filters).toEqual(filtersNew)
     })
   })
 
   describe("clearFetchParam", () => {
     it("clears specific query param", () => {
-      const params = { foo: "foo", bar: 3 }
+      const filters = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
 
       const c = new Collection<IGenerics>({ fetchFn })
-      c.setFetchParams(params)
+      c.setFetchParams(filters)
       c.clearFetchParam("foo")
 
-      expect(toJS(c.fetchParams)).toEqual({ bar: 3 })
+      expect(toJS(c.filters)).toEqual({ bar: 3 })
     })
   })
 
   describe("clearFetchParams", () => {
-    it("clears all query params", () => {
-      const params = { foo: "foo", bar: 3 }
+    it("clears all filters", () => {
+      const filters = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
 
       const c = new Collection<IGenerics>({ fetchFn })
-      c.setFetchParams(params)
+      c.setFetchParams(filters)
       c.clearFetchParams()
 
-      expect(c.fetchParams).toEqual({})
+      expect(c.filters).toEqual({})
     })
   })
 
   describe("resetFetchParams", () => {
-    it("resets fetch params to defaults passed through the constructor", () => {
-      const defaultQueryParams = { foo: "foo", bar: 3 }
+    it("resets fetch filters to defaults passed through the constructor", () => {
+      const defaultFilters = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultQueryParams })
+      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
       c.mergeFetchParams({ baz: { qux: false } })
       c.resetFetchParams()
 
-      expect(c.fetchParams).toEqual(defaultQueryParams)
+      expect(c.filters).toEqual(defaultFilters)
     })
 
-    it("clears fetch params if not defaults passed", () => {
+    it("clears fetch filters if not defaults passed", () => {
       const fetchFn = jest.fn()
 
       const c = new Collection<IGenerics>({ fetchFn })
       c.mergeFetchParams({ baz: { qux: false } })
       c.resetFetchParams()
 
-      expect(c.fetchParams).toEqual({})
+      expect(c.filters).toEqual({})
     })
   })
 
   describe("syncParamsToUrl", () => {
-    it("synchronizes query params to URL on change when props.syncParamsToUrl", async () => {
+    it("synchronizes filters to URL on change when props.syncParamsToUrl", async () => {
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
 
-      await c.fetch({ params: { foo: "bar" } })
+      await c.fetch({ filters: { foo: "bar" } })
       expect(window.location.search).toBe("?foo=bar")
 
       c.mergeFetchParams({ bar: 2 })
@@ -329,17 +329,17 @@ describe("Collection", () => {
 
   describe("resetState", () => {
     it("clears data and related state", async () => {
-      const params = { foo: "bar" }
+      const filters = { foo: "bar" }
       const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
-      await c.fetch({ params })
+      await c.fetch({ filters })
       c.resetState()
 
       expect(c.data.length).toBe(0)
       expect(c.initialized).toBe(false)
       expect(c.searchQuery).toBe("")
-      expect(c.fetchParams).toEqual({})
+      expect(c.filters).toEqual({})
     })
 
     it("clears errors", async () => {

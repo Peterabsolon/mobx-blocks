@@ -11,12 +11,13 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   data = observable<IGenerics["data"]>([])
   initialized = false
 
+  filtersMap = observable(new Map())
+  searchQuery = ""
+
   fetching = false
-  fetchParamsMap = observable(new Map())
   fetchErr?: unknown
 
   searching = false
-  searchQuery = ""
   searchErr?: unknown
 
   // ====================================================
@@ -27,27 +28,27 @@ export class Collection<IGenerics extends ICollectionGenerics> {
 
     this.handleSearch = debounce(this.handleSearch, 500)
 
-    if (props.defaultQueryParams) {
-      this.fetchParamsMap.replace(props.defaultQueryParams)
+    if (props.defaultFilters) {
+      this.filtersMap.replace(props.defaultFilters)
     }
 
     if (props.syncParamsToUrl) {
-      reaction(() => this.fetchParamsMap.keys(), this.syncFetchParamsToUrl)
+      reaction(() => this.filtersMap.keys(), this.syncFetchParamsToUrl)
     }
   }
 
   // ====================================================
   // Computed
   // ====================================================
-  get fetchParams(): IGenerics["fetchParams"] {
-    return Object.fromEntries(this.fetchParamsMap)
+  get filters(): IGenerics["filters"] {
+    return Object.fromEntries(this.filtersMap)
   }
 
   // ====================================================
   // Private
   // ====================================================
   private syncFetchParamsToUrl = () => {
-    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.fetchParams)}`)
+    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.filters)}`)
   }
 
   private handleSearch = async (opts: { shouldThrowError?: boolean }) => {
@@ -82,17 +83,17 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   /**
    * Perform fetch API request
    */
-  fetch = async (opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
+  fetch = async (opts: IFetchFnOptions<IGenerics["filters"]> = {}) => {
     const { fetchFn, errorHandlerFn } = this.props
 
-    if (opts.params) {
-      opts.clearParams ? this.setFetchParams(opts.params) : this.mergeFetchParams(opts.params)
+    if (opts.filters) {
+      opts.clearFilters ? this.setFetchParams(opts.filters) : this.mergeFetchParams(opts.filters)
     }
 
     this.fetching = true
 
     try {
-      const data = await fetchFn(this.fetchParams)
+      const data = await fetchFn(this.filters)
       this.data.replace(this.data.concat(data))
     } catch (err) {
       this.fetchErr = err
@@ -111,45 +112,45 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   }
 
   /**
-   * Set fetch params
+   * Set fetch filters
    */
-  setFetchParams = async (params: IGenerics["fetchParams"]) => {
-    this.fetchParamsMap.clear()
-    this.fetchParamsMap.replace(params)
+  setFetchParams = async (filters: IGenerics["filters"]) => {
+    this.filtersMap.clear()
+    this.filtersMap.replace(filters)
   }
 
   /**
-   * Merge fetch params
+   * Merge fetch filters
    */
-  mergeFetchParams = async (params: IGenerics["fetchParams"]) => {
-    this.fetchParamsMap.merge(params)
+  mergeFetchParams = async (filters: IGenerics["filters"]) => {
+    this.filtersMap.merge(filters)
   }
 
   /**
-   * Clear all fetch params from state
+   * Clear all fetch filters from state
    */
   clearFetchParams = () => {
-    this.fetchParamsMap.clear()
+    this.filtersMap.clear()
   }
 
   /**
    * Clear specific fetch param from state
    */
-  clearFetchParam = (key: keyof IGenerics["fetchParams"]) => {
-    this.fetchParamsMap.delete(key.toString())
+  clearFetchParam = (key: keyof IGenerics["filters"]) => {
+    this.filtersMap.delete(key.toString())
   }
 
   /**
-   * Reset fetch params to defaults (passed in the constructor)
+   * Reset fetch filters to defaults (passed in the constructor)
    */
   resetFetchParams = () => {
-    this.fetchParamsMap.replace(this.props.defaultQueryParams || {})
+    this.filtersMap.replace(this.props.defaultFilters || {})
   }
 
   /**
-   * Perform debounced search using search query and fetch params
+   * Perform debounced search using search query and fetch filters
    */
-  search = async (query: string, opts: IFetchFnOptions<IGenerics["fetchParams"]> = {}) => {
+  search = async (query: string, opts: IFetchFnOptions<IGenerics["filters"]> = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
   }
@@ -162,7 +163,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.initialized = false
 
     this.fetching = false
-    this.fetchParamsMap.clear()
+    this.filtersMap.clear()
     this.fetchErr = undefined
 
     this.searching = false

@@ -10,9 +10,9 @@ export interface ICollectionGenerics {
   data: { id: ICollectionGenerics["id"] }
 
   /**
-   * The shape of params used for the fetch API request
+   * The shape of query params used for the fetch API request
    */
-  fetchParams: Record<string, any>
+  filters: Record<string, any>
 
   // searchParams: Record<string, any> // TODO?
 }
@@ -21,12 +21,12 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
   /**
    * The method through which the Collection fetches the data from your API
    */
-  fetchFn: (params?: IGenerics["fetchParams"]) => Promise<IGenerics["data"][]>
+  fetchFn: (filters?: IGenerics["filters"]) => Promise<IGenerics["data"][]>
 
   /**
    * Optional method through which the Collection searches the data on your API
    */
-  searchFn?: (query: string, params?: IGenerics["fetchParams"]) => Promise<IGenerics["data"][]>
+  searchFn?: (query: string, filters?: IGenerics["filters"]) => Promise<IGenerics["data"][]>
 
   /**
    * Optional method to handle API request thrown errors, e.g. to render a toast notification
@@ -34,9 +34,9 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
   errorHandlerFn?: (err: unknown) => any
 
   /**
-   * The default fetch query params
+   * The default query params
    */
-  defaultQueryParams?: IGenerics["fetchParams"]
+  defaultFilters?: IGenerics["filters"]
 
   /**
    * If true, the fetch params are automatically synchronized to URL
@@ -44,17 +44,17 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
   syncParamsToUrl?: boolean
 }
 
-export interface IFetchFnOptions<TFetchParams> {
+export interface IFetchFnOptions<TFilters> {
   /**
    * The params to perform the API request with.
    * By default the params are merged with params already present in state.
    */
-  params?: TFetchParams
+  filters?: TFilters
 
   /**
    * If true, the existing params are cleared and only the passed in ones are used
    */
-  clearParams?: boolean
+  clearFilters?: boolean
 
   /**
    * If true, the caught exception from API request is rethrown after being set to state
