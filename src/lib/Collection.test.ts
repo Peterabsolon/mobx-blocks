@@ -1,5 +1,5 @@
 import { toJS } from "mobx"
-import { Collection } from "./Collection"
+import { Collection, createCollection } from "./Collection"
 
 interface IFilters {
   foo?: string
@@ -368,5 +368,13 @@ describe("Collection", () => {
       expect(c.fetchErr).toBe(undefined)
       expect(c.searchErr).toBe(undefined)
     })
+  })
+})
+
+describe("createCollection", () => {
+  it("creates a Collection instance", () => {
+    const fetchFn = jest.fn(() => Promise.resolve([]))
+    const result = createCollection({ fetchFn })
+    expect(result).toBeInstanceOf(Collection)
   })
 })
