@@ -1,12 +1,12 @@
-import { useEffect } from "react";
-import { observer } from "mobx-react-lite";
+import { useEffect } from "react"
+import { observer } from "mobx-react-lite"
 
-import { app } from "./App.store";
+import { app } from "./App.store"
 
 const App = observer(() => {
   useEffect(() => {
-    app.products.fetch();
-  }, []);
+    app.products.fetch()
+  }, [])
 
   return (
     <div className="p-10">
@@ -35,7 +35,7 @@ const App = observer(() => {
         </tbody>
       </table>
     </div>
-  );
-});
+  )
+})
 
-export default App;
+export default App

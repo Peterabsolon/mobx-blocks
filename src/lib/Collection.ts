@@ -2,7 +2,7 @@ import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
-import { ICollectionGenerics, ICollectionProps, IFetchFnOptions } from "./Collection.types"
+import { ICollectionGenerics, ICollectionConfig, IFetchFnOptions } from "./Collection.types"
 
 export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
@@ -23,7 +23,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props: ICollectionProps<IGenerics>) {
+  constructor(public props: ICollectionConfig<IGenerics>) {
     makeAutoObservable(this, { props: false })
 
     this.handleSearch = debounce(this.handleSearch, 500)
@@ -174,3 +174,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.searchErr = undefined
   }
 }
+
+export const createCollection = <IGenerics extends ICollectionGenerics>(
+  props: ICollectionConfig<IGenerics>
+) => new Collection<IGenerics>(props)

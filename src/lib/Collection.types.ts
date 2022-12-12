@@ -28,7 +28,7 @@ export interface ICollectionGenerics {
   orderDirection?: string
 }
 
-export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
+export interface ICollectionConfig<IGenerics extends ICollectionGenerics> {
   /**
    * The method through which the Collection fetches the data from your API
    */

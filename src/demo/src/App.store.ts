@@ -15,4 +15,8 @@ class AppStore {
   }
 }
 
+export const AppStoreObj = {
+  products: {},
+}
+
 export const app = new AppStore()
