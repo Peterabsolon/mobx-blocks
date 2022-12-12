@@ -46,6 +46,7 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
 
   /**
    * The default query params
+   * @example { archived: false }
    */
   defaultFilters?: IGenerics["filters"]
 
@@ -53,6 +54,13 @@ export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
    * If true, the fetch params are automatically synchronized to URL
    */
   syncParamsToUrl?: boolean
+
+  /**
+   * Override default parameter names for asd/desc depending on what your API expects
+   * @default ["ASC", "DESC"]
+   * @example ['ascending', 'descending']
+   */
+  sortDirectionParams?: [string, string]
 }
 
 export interface IFetchFnOptions<TFilters> {

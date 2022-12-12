@@ -7,8 +7,9 @@
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
     "build": "webpack && tsc",
-    "build:demo": "webpack --config webpack.config.demo.js",
-    "test": "jest",
+    "test": "jest ./src/lib",
+    "test:integration": "cd ./src/demo && npm run test",
+    "test:all": "CI=true npm run test && CI=true npm run test:integration",
     "coverage": "npm run test -- --coverage",
     "prepare": "husky install",
     "format": "prettier --config .prettierrc --write 'src/**/*.{ts,tsx}'",
