@@ -14,6 +14,13 @@ export interface ICollectionGenerics {
    */
   filters: Record<string, any>
 
+  /**
+   * The keys of supported order columns
+   */
+  orderBy: "id" | "name"
+
+  orderDirection: "asc" | "desc"
+
   // searchParams: Record<string, any> // TODO?
 }
 

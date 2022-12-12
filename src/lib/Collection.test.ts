@@ -9,8 +9,10 @@ interface IFilters {
 
 interface IGenerics {
   id: string
-  data: { id: string }
+  data: { id: string; name?: string }
   filters: IFilters
+  orderBy: "id" | "name"
+  orderDirection: "asc" | "desc"
 }
 
 describe("Collection", () => {

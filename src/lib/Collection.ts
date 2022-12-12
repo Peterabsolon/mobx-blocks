@@ -85,10 +85,12 @@ export class Collection<IGenerics extends ICollectionGenerics> {
    */
   fetch = async (opts: IFetchFnOptions<IGenerics["filters"]> = {}) => {
     const { fetchFn, errorHandlerFn } = this.props
-    const { filters, clearFilters, query } = opts
+    const { clearFilters, query } = opts
 
-    if (query || filters) {
-      this[clearFilters ? "setFetchParams" : "mergeFetchParams"](filters || qs.parse(query || ""))
+    const filters = query ? qs.parse(query) : opts.filters
+    if (filters) {
+      if (clearFilters) this.setFetchParams(filters)
+      else this.mergeFetchParams(filters)
     }
 
     this.fetching = true
