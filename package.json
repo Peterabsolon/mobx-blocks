@@ -1,5 +1,5 @@
 {
-  "name": "@peterabsolon/mobx-awesome-query",
+  "name": "mobx-blocks",
   "version": "0.0.0-rc1",
   "description": "Something like react-query for people who like MobX or keeping their logic and view layers separate",
   "main": "build/index.js",
@@ -17,14 +17,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Peterabsolon/mobx-awesome-query"
+    "url": "https://github.com/Peterabsolon/mobx-blocks"
   },
   "author": "Peter Absolon <peterabsolon@yahoo.com.com> (https://github.com/Peterabsolon)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Peterabsolon/mobx-awesome-query/issues"
+    "url": "https://github.com/Peterabsolon/mobx-blocks/issues"
   },
-  "homepage": "https://github.com/Peterabsolon/mobx-awesome-query",
+  "homepage": "https://github.com/Peterabsolon/mobx-blocks",
   "keywords": [
     "mobx",
     "state",

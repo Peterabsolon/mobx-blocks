@@ -1,5 +1,5 @@
 import { makeAutoObservable } from "mobx"
-import { Collection } from "@peterabsolon/mobx-awesome-query"
+import { Collection } from "mobx-blocks"
 
 import { IProductsCollectionGenerics, SORT_DIRECTION_PARAMS } from "./App.types"
 import { api } from "./FakeApi"
