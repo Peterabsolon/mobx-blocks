@@ -11,17 +11,21 @@ export interface ICollectionGenerics {
 
   /**
    * The shape of query params used for the fetch API request
+   * @example filters: { name: string }
    */
   filters: Record<string, any>
 
   /**
    * The keys of supported order columns
+   * @example orderBy: 'id' | 'name'
    */
-  orderBy: "id" | "name"
+  orderBy?: string
 
-  orderDirection: "asc" | "desc"
-
-  // searchParams: Record<string, any> // TODO?
+  /**
+   * The keys of supported order directions
+   * @example orderBy: 'asc' | 'desc'
+   */
+  orderDirection?: string
 }
 
 export interface ICollectionProps<IGenerics extends ICollectionGenerics> {
