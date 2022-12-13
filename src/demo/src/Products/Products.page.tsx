@@ -4,8 +4,6 @@ import cx from "classnames"
 // import { Pagination } from "../components"
 
 import { store } from "./Products.store"
-import { setOrderHelper } from "../App.utils"
-import { ORDER_DIRECTION, TOrderDirection } from "../App.types"
 
 export const Products = observer(() => {
   const { products } = store
@@ -42,9 +40,9 @@ export const Products = observer(() => {
                 className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.orderBy === "id",
                 })}
-                onClick={() => setOrderHelper<TOrderDirection>("id", products, ORDER_DIRECTION)}
+                onClick={() => products.setOrderHelper("id")}
               >
-                {products.orderDirection === "ASCENDING" ? "↑" : "↓"}
+                {products.orderAscending ? "↑" : "↓"}
               </button>
             </th>
 
@@ -60,9 +58,9 @@ export const Products = observer(() => {
                 className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.orderBy === "name",
                 })}
-                onClick={() => setOrderHelper<TOrderDirection>("name", products, ORDER_DIRECTION)}
+                onClick={() => products.setOrderHelper("name")}
               >
-                {products.orderDirection === "ASCENDING" ? "↑" : "↓"}
+                {products.orderAscending ? "↑" : "↓"}
               </button>
             </th>
           </tr>

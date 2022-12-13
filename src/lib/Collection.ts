@@ -24,10 +24,10 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
   filtersMap = observable(new Map())
   searchQuery = ""
 
-  orderBy?: T["orderBy"]
-  orderDirection?: T["orderDirection"] | ("asc" | "desc")
   page = 1
   pageSize = PAGE_SIZE_DEFAULT
+  orderBy?: T["orderBy"]
+  orderAscending = false
 
   fetching = false
   fetchErr?: unknown
@@ -63,10 +63,10 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
     return Object.fromEntries(this.filtersMap)
   }
 
-  get sorting(): { orderBy: T["orderBy"]; orderDirection: T["orderDirection"] } {
+  get sorting(): { orderBy: T["orderBy"]; orderAscending: boolean } {
     return {
       orderBy: this.orderBy,
-      orderDirection: this.orderDirection,
+      orderAscending: this.orderAscending,
     }
   }
 
@@ -79,7 +79,7 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
 
   get queryParams(): T["filters"] & {
     orderBy: T["orderBy"]
-    orderDirection: T["orderDirection"]
+    orderAscending: boolean
     page?: number
     pageSize?: number
   } {
@@ -131,10 +131,10 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
    */
   fetch = async (opts: IFetchFnOptions<T> = {}): Promise<TFetchFnResult<T>> => {
     const { fetchFn, errorHandlerFn } = this.config
-    const { clearFilters, query, orderBy, orderDirection, page, pageSize } = opts
+    const { clearFilters, query, orderBy, orderAscending, page, pageSize } = opts
 
     this.orderBy = orderBy
-    this.orderDirection = orderDirection
+    this.orderAscending = orderAscending || false
 
     if (page) this.page = page
     if (pageSize) this.pageSize = pageSize
@@ -235,8 +235,24 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
   /**
    * Set the direction to sort the data with
    */
-  setOrderDirection = (orderDirection?: T["orderDirection"]) => {
-    this.orderDirection = orderDirection
+  toggleOrderDirection = () => {
+    this.orderAscending = !this.orderAscending
+  }
+
+  /**
+   * Helper to either set a new orderBy key or toggle direction if it's the same
+   */
+  setOrderHelper = async (orderBy?: T["orderBy"]) => {
+    if (orderBy === this.orderBy) {
+      this.toggleOrderDirection()
+    } else {
+      this.orderAscending = false
+    }
+
+    await this.fetch({
+      orderBy,
+      orderAscending: this.orderAscending,
+    })
   }
 
   /**
@@ -252,7 +268,7 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
     this.searchQuery = ""
 
     this.orderBy = undefined
-    this.orderDirection = undefined
+    this.orderAscending = false
     this.page = 1
     this.pageSize = 20
 

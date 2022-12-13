@@ -20,13 +20,6 @@ export interface ICollectionGenerics {
    * @example orderBy: 'id' | 'name'
    */
   orderBy?: string
-
-  /**
-   * The keys of supported order directions
-   * @default 'asc' | 'desc'
-   * @example 'ascending' | 'descending'
-   */
-  orderDirection?: string
 }
 
 export interface ICollectionGenericsDefaults {
@@ -43,7 +36,7 @@ export interface ICollectionConfig<T extends ICollectionGenerics> {
   fetchFn: (
     queryParams: T["filters"] & {
       orderBy?: T["orderBy"]
-      orderDirection?: T["orderDirection"]
+      orderAscending: boolean
       page?: number
       pageSize?: number
     }
@@ -101,9 +94,9 @@ export interface IFetchFnOptions<IGenerics extends ICollectionGenerics> {
   orderBy?: IGenerics["orderBy"]
 
   /**
-   * Set order direction
+   * Set order direction; true = ascending, false = descending
    */
-  orderDirection?: IGenerics["orderDirection"]
+  orderAscending?: boolean
 
   /**
    * The page to fetch

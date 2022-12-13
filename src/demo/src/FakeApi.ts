@@ -3,11 +3,10 @@ import { faker } from "@faker-js/faker"
 
 import { IProduct } from "./Products/Products.types"
 import { IUser } from "./Users/Users.types"
-import { TOrderDirection } from "./App.types"
 
 interface IParams {
   orderBy?: string
-  orderDirection?: TOrderDirection
+  orderAscending?: boolean
   page?: number
   pageSize?: number
 }
@@ -36,11 +35,14 @@ const isFuzzyMatch = (a?: string | number, b?: string | number) =>
     .includes(String(b)?.toLowerCase() || "")
 
 const buildResponse = <T extends IAnyObject>(
-  { orderBy, orderDirection, page, pageSize, ...filters }: IParams,
+  { orderBy, orderAscending, page, pageSize, ...filters }: IParams,
   table: T[]
 ) => {
-  let data = table
+  let data = [...table]
   let totalCount = 1000
+
+  console.log("table.length", table.length)
+  console.log("orderAscending", orderAscending)
 
   // Filter
   Object.entries(filters).forEach(([key, value]) => {
@@ -48,19 +50,17 @@ const buildResponse = <T extends IAnyObject>(
   })
 
   // Sort
-  if (orderBy && orderDirection) {
+  if (orderBy && typeof orderAscending !== "undefined") {
     data = data.sort((a, z) => {
-      const isAsc = orderDirection === "ASCENDING"
-
-      const first = isAsc ? a : z
-      const last = isAsc ? z : a
+      const first = orderAscending ? a : z
+      const last = orderAscending ? z : a
 
       // If both are numbers, compare values
       if (typeof first[orderBy] === "number" && typeof last[orderBy] === "number") {
         return first[orderBy] - last[orderBy]
       }
 
-      // Else compare by cassting to string
+      // Else compare by casting to string
       return String(first[orderBy]).localeCompare(String(last[orderBy]))
     })
   }
@@ -73,6 +73,8 @@ const buildResponse = <T extends IAnyObject>(
     data = data.slice(from, to)
   }
 
+  console.log("data.length", data.length)
+
   return { data, totalCount }
 }
 
@@ -81,6 +83,7 @@ class FakeApi {
   users = times(1000).map(mockUser)
 
   getProducts = async (params: IParams) => {
+    console.log({ params })
     try {
       await sleep(250)
       return buildResponse<IProduct>(params, this.products)
