@@ -23,21 +23,36 @@ export interface ICollectionGenerics {
 
   /**
    * The keys of supported order directions
-   * @example orderBy: 'asc' | 'desc'
+   * @default 'asc' | 'desc'
+   * @example 'ascending' | 'descending'
    */
   orderDirection?: string
 }
 
-export interface ICollectionConfig<IGenerics extends ICollectionGenerics> {
+export interface ICollectionGenericsDefaults {
+  id: string
+  data: { id: string }
+  orderDirection: "asc" | "desc"
+  filters: Record<string, any>
+}
+
+export interface ICollectionConfig<T extends ICollectionGenerics> {
   /**
    * The method through which the Collection fetches the data from your API
    */
-  fetchFn: (filters?: IGenerics["filters"]) => Promise<IGenerics["data"][]>
+  fetchFn: (
+    queryParams: T["filters"] & {
+      orderBy?: T["orderBy"]
+      orderDirection?: T["orderDirection"]
+      page?: number
+      pageSize?: number
+    }
+  ) => Promise<TFetchFnResult<T>>
 
   /**
    * Optional method through which the Collection searches the data on your API
    */
-  searchFn?: (query: string, filters?: IGenerics["filters"]) => Promise<IGenerics["data"][]>
+  searchFn?: (query: string, filters?: T["filters"]) => Promise<T["data"][]>
 
   /**
    * Optional method to handle API request thrown errors, e.g. to render a toast notification
@@ -48,27 +63,26 @@ export interface ICollectionConfig<IGenerics extends ICollectionGenerics> {
    * The default query params
    * @example { archived: false }
    */
-  defaultFilters?: IGenerics["filters"]
+  defaultFilters?: T["filters"]
+
+  /**
+   * Set page size to use
+   * @default 20
+   */
+  pageSize?: number
 
   /**
    * If true, the fetch params are automatically synchronized to URL
    */
   syncParamsToUrl?: boolean
-
-  /**
-   * Override default parameter names for asd/desc depending on what your API expects
-   * @default ["ASC", "DESC"]
-   * @example ['ascending', 'descending']
-   */
-  sortDirectionParams?: [string, string]
 }
 
-export interface IFetchFnOptions<TFilters> {
+export interface IFetchFnOptions<IGenerics extends ICollectionGenerics> {
   /**
    * The params to perform the API request with.
    * By default the params are merged with params already present in state.
    */
-  filters?: TFilters
+  filters?: IGenerics["filters"]
 
   /**
    * The query to perform the API request with.
@@ -82,7 +96,32 @@ export interface IFetchFnOptions<TFilters> {
   clearFilters?: boolean
 
   /**
+   * Set order by
+   */
+  orderBy?: IGenerics["orderBy"]
+
+  /**
+   * Set order direction
+   */
+  orderDirection?: IGenerics["orderDirection"]
+
+  /**
+   * The page to fetch
+   */
+  page?: number
+
+  /**
+   * The page size
+   */
+  pageSize?: number
+
+  /**
    * If true, the caught exception from API request is rethrown after being set to state
    */
   shouldThrowError?: boolean
+}
+
+export type TFetchFnResult<T extends ICollectionGenerics> = {
+  data: T["data"][]
+  totalCount: number
 }

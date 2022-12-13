@@ -15,6 +15,13 @@ interface IGenerics {
   orderDirection: "asc" | "desc"
 }
 
+const fetchFn = jest.fn(() =>
+  Promise.resolve({
+    data: [{ id: "1" }],
+    totalCount: 1,
+  })
+)
+
 describe("Collection", () => {
   afterEach(() => {
     jest.useRealTimers()
@@ -22,8 +29,6 @@ describe("Collection", () => {
 
   describe("fetch", () => {
     it("performs fetch API request, saves data to state", async () => {
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
-
       const c = new Collection<IGenerics>({ fetchFn })
       c.fetch()
 
@@ -36,7 +41,6 @@ describe("Collection", () => {
 
     it("performs fetch API request with filters passed as object", async () => {
       const filters = { foo: "bar" }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
       await c.fetch({ filters })
@@ -46,7 +50,6 @@ describe("Collection", () => {
 
     it("performs fetch API request with filters passed as string", async () => {
       const query = "?foo=bar"
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
       await c.fetch({ query })
@@ -56,7 +59,6 @@ describe("Collection", () => {
 
     it("performs fetch API request with default filters", async () => {
       const filters = { foo: "bar" }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, defaultFilters: filters })
       await c.fetch()
@@ -67,7 +69,6 @@ describe("Collection", () => {
     it("performs fetch API request with both default filters and filters passed as argument", async () => {
       const defaultFilters = { foo: "foo" }
       const filters = { bar: 2 }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
       await c.fetch({ filters })
@@ -78,7 +79,6 @@ describe("Collection", () => {
     it("performs fetch API request with filters passed as argument only when opts.clearFilters is true", async () => {
       const defaultFilters = { foo: "foo" }
       const filters = { bar: 2 }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
       await c.fetch({ filters, clearFilters: true })
@@ -88,9 +88,7 @@ describe("Collection", () => {
 
     it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
       const replaceStateSpy = jest.spyOn(window.history, "replaceState")
-
       const filters = { foo: "bar", bar: 2 }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
       await c.fetch({ filters })
@@ -132,9 +130,8 @@ describe("Collection", () => {
       expect(errorHandlerFn).toBeCalledWith(error)
     })
 
-    it("appends new data to exisitng", async () => {
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
-
+    // TODO: Use for fetchMore()
+    it.skip("appends new data to exisitng", async () => {
       const c = new Collection<IGenerics>({ fetchFn })
       await c.fetch()
       expect(c.data.length).toBe(1)
@@ -149,7 +146,6 @@ describe("Collection", () => {
       // use fake timers so workaround debounce
       jest.useFakeTimers()
 
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
       const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, searchFn })
@@ -172,7 +168,6 @@ describe("Collection", () => {
     it("does nothing when searchFn not passed", async () => {
       jest.useFakeTimers()
 
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
       const c = new Collection<IGenerics>({ fetchFn })
 
       const promise = c.search("someQuery")
@@ -185,7 +180,6 @@ describe("Collection", () => {
     it("debounces search, uses last search query", async () => {
       jest.useFakeTimers()
 
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
       const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn, searchFn })
@@ -253,7 +247,6 @@ describe("Collection", () => {
   describe("setFetchParams", () => {
     it("saves filters to state, clears other state", async () => {
       const filters = { foo: "foo", bar: 2, baz: { qux: false } }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
       c.setFetchParams(filters)
@@ -316,8 +309,6 @@ describe("Collection", () => {
 
   describe("syncParamsToUrl", () => {
     it("synchronizes filters to URL on change when props.syncParamsToUrl", async () => {
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
-
       const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
 
       await c.fetch({ filters: { foo: "bar" } })
@@ -340,7 +331,6 @@ describe("Collection", () => {
   describe("resetState", () => {
     it("clears data and related state", async () => {
       const filters = { foo: "bar" }
-      const fetchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
       const c = new Collection<IGenerics>({ fetchFn })
       await c.fetch({ filters })
@@ -373,7 +363,6 @@ describe("Collection", () => {
 
 describe("createCollection", () => {
   it("creates a Collection instance", () => {
-    const fetchFn = jest.fn(() => Promise.resolve([]))
     const result = createCollection({ fetchFn })
     expect(result).toBeInstanceOf(Collection)
   })

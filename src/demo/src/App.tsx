@@ -1,39 +1,31 @@
-import { useEffect } from "react"
 import { observer } from "mobx-react-lite"
 
 import { app } from "./App.store"
+import { Products } from "./Products/Products.page"
+import { Users } from "./Users/Users.page"
 
 const App = observer(() => {
-  useEffect(() => {
-    app.products.fetch()
-  }, [])
-
   return (
     <div className="p-10">
-      <input
-        className="input-bordered input mb-4 w-full"
-        value={app.products.searchQuery}
-        onChange={(evt) => app.products.search(evt.target.value)}
-        placeholder="Search"
-      />
+      <div className="tabs mb-5">
+        <a
+          onClick={() => app.setPage("products")}
+          className={`tab tab-bordered ${app.page === "products" ? "tab-active" : ""}`}
+        >
+          Products
+        </a>
 
-      <table className="table w-full">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-          </tr>
-        </thead>
+        <a
+          onClick={() => app.setPage("users")}
+          className={`tab tab-bordered ${app.page === "users" ? "tab-active" : ""}`}
+        >
+          Users
+        </a>
+      </div>
 
-        <tbody>
-          {app.products.data.map((product) => (
-            <tr key={product.id}>
-              <td>{product.id}</td>
-              <td>{product.name}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      {app.page === "products" && <Products />}
+
+      {app.page === "users" && <Users />}
     </div>
   )
 })

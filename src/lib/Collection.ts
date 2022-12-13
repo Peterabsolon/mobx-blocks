@@ -2,17 +2,32 @@ import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
-import { ICollectionGenerics, ICollectionConfig, IFetchFnOptions } from "./Collection.types"
+import {
+  ICollectionConfig,
+  ICollectionGenerics,
+  ICollectionGenericsDefaults,
+  IFetchFnOptions,
+  TFetchFnResult,
+} from "./Collection.types"
 
-export class Collection<IGenerics extends ICollectionGenerics> {
+const PAGE_SIZE_DEFAULT = 20
+
+export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefaults> {
   // ====================================================
   // Model
   // ====================================================
-  data = observable<IGenerics["data"]>([])
   initialized = false
+
+  data = observable<T["data"]>([])
+  totalCount = 0
 
   filtersMap = observable(new Map())
   searchQuery = ""
+
+  orderBy?: T["orderBy"]
+  orderDirection?: T["orderDirection"] | ("asc" | "desc")
+  page = 1
+  pageSize = PAGE_SIZE_DEFAULT
 
   fetching = false
   fetchErr?: unknown
@@ -23,16 +38,20 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props: ICollectionConfig<IGenerics>) {
-    makeAutoObservable(this, { props: false })
+  constructor(public config: ICollectionConfig<T>) {
+    makeAutoObservable(this, { config: false })
 
     this.handleSearch = debounce(this.handleSearch, 500)
 
-    if (props.defaultFilters) {
-      this.filtersMap.replace(props.defaultFilters)
+    if (config.pageSize) {
+      this.pageSize = config.pageSize
     }
 
-    if (props.syncParamsToUrl) {
+    if (config.defaultFilters) {
+      this.filtersMap.replace(config.defaultFilters)
+    }
+
+    if (config.syncParamsToUrl) {
       reaction(() => this.filtersMap.keys(), this.syncFetchParamsToUrl)
     }
   }
@@ -40,19 +59,46 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   // ====================================================
   // Computed
   // ====================================================
-  get filters(): IGenerics["filters"] {
+  get filters(): T["filters"] {
     return Object.fromEntries(this.filtersMap)
+  }
+
+  get sorting(): { orderBy: T["orderBy"]; orderDirection: T["orderDirection"] } {
+    return {
+      orderBy: this.orderBy,
+      orderDirection: this.orderDirection,
+    }
+  }
+
+  get pagination(): { page?: number; pageSize?: number } {
+    return {
+      page: this.page,
+      pageSize: this.pageSize,
+    }
+  }
+
+  get queryParams(): T["filters"] & {
+    orderBy: T["orderBy"]
+    orderDirection: T["orderDirection"]
+    page?: number
+    pageSize?: number
+  } {
+    return {
+      ...this.filters,
+      ...this.sorting,
+      ...this.pagination,
+    }
   }
 
   // ====================================================
   // Private
   // ====================================================
   private syncFetchParamsToUrl = () => {
-    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.filters)}`)
+    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.queryParams)}`)
   }
 
   private handleSearch = async (opts: { shouldThrowError?: boolean }) => {
-    const { searchFn, errorHandlerFn } = this.props
+    const { searchFn, errorHandlerFn } = this.config
     if (!searchFn) {
       return
     }
@@ -83,9 +129,15 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   /**
    * Perform fetch API request
    */
-  fetch = async (opts: IFetchFnOptions<IGenerics["filters"]> = {}) => {
-    const { fetchFn, errorHandlerFn } = this.props
-    const { clearFilters, query } = opts
+  fetch = async (opts: IFetchFnOptions<T> = {}): Promise<TFetchFnResult<T>> => {
+    const { fetchFn, errorHandlerFn } = this.config
+    const { clearFilters, query, orderBy, orderDirection, page, pageSize } = opts
+
+    this.orderBy = orderBy
+    this.orderDirection = orderDirection
+
+    if (page) this.page = page
+    if (pageSize) this.pageSize = pageSize
 
     const filters = query ? qs.parse(query) : opts.filters
     if (filters) {
@@ -96,8 +148,12 @@ export class Collection<IGenerics extends ICollectionGenerics> {
     this.fetching = true
 
     try {
-      const data = await fetchFn(this.filters)
-      this.data.replace(this.data.concat(data))
+      const res = await fetchFn(this.queryParams)
+
+      this.data.replace(res.data)
+      this.totalCount = res.totalCount
+
+      return res
     } catch (err) {
       this.fetchErr = err
 
@@ -108,6 +164,8 @@ export class Collection<IGenerics extends ICollectionGenerics> {
       if (opts.shouldThrowError) {
         throw err
       }
+
+      return { data: [], totalCount: 0 }
     } finally {
       this.fetching = false
       this.initialized = true
@@ -115,9 +173,18 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   }
 
   /**
+   * Performs the initial fetch, skips if initiliazed already
+   */
+  init = async (opts: IFetchFnOptions<T> = {}): Promise<void> => {
+    if (!this.initialized) {
+      await this.fetch(opts)
+    }
+  }
+
+  /**
    * Set fetch filters
    */
-  setFetchParams = async (filters: IGenerics["filters"]) => {
+  setFetchParams = async (filters: T["filters"]) => {
     this.filtersMap.clear()
     this.filtersMap.replace(filters)
   }
@@ -125,7 +192,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   /**
    * Merge fetch filters
    */
-  mergeFetchParams = async (filters: IGenerics["filters"]) => {
+  mergeFetchParams = async (filters: T["filters"]) => {
     this.filtersMap.merge(filters)
   }
 
@@ -139,7 +206,7 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   /**
    * Clear specific fetch param from state
    */
-  clearFetchParam = (key: keyof IGenerics["filters"]) => {
+  clearFetchParam = (key: keyof T["filters"]) => {
     this.filtersMap.delete(key.toString())
   }
 
@@ -147,26 +214,49 @@ export class Collection<IGenerics extends ICollectionGenerics> {
    * Reset fetch filters to defaults (passed in the constructor)
    */
   resetFetchParams = () => {
-    this.filtersMap.replace(this.props.defaultFilters || {})
+    this.filtersMap.replace(this.config.defaultFilters || {})
   }
 
   /**
    * Perform debounced search using search query and fetch filters
    */
-  search = async (query: string, opts: IFetchFnOptions<IGenerics["filters"]> = {}) => {
+  search = async (query: string, opts: IFetchFnOptions<T> = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
+  }
+
+  /**
+   * Set param key to sort the data by
+   */
+  setOrderBy = (orderBy?: T["orderBy"]) => {
+    this.orderBy = orderBy
+  }
+
+  /**
+   * Set the direction to sort the data with
+   */
+  setOrderDirection = (orderDirection?: T["orderDirection"]) => {
+    this.orderDirection = orderDirection
   }
 
   /**
    * Reset all state to initial
    */
   resetState = () => {
-    this.data.clear()
     this.initialized = false
 
-    this.fetching = false
+    this.data.clear()
+    this.totalCount = 0
+
     this.filtersMap.clear()
+    this.searchQuery = ""
+
+    this.orderBy = undefined
+    this.orderDirection = undefined
+    this.page = 1
+    this.pageSize = 20
+
+    this.fetching = false
     this.fetchErr = undefined
 
     this.searching = false
@@ -175,6 +265,5 @@ export class Collection<IGenerics extends ICollectionGenerics> {
   }
 }
 
-export const createCollection = <IGenerics extends ICollectionGenerics>(
-  props: ICollectionConfig<IGenerics>
-) => new Collection<IGenerics>(props)
+export const createCollection = <T extends ICollectionGenerics>(props: ICollectionConfig<T>) =>
+  new Collection<T>(props)

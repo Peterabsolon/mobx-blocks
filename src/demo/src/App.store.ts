@@ -1,22 +1,17 @@
 import { makeAutoObservable } from "mobx"
-import { Collection } from "mobx-blocks"
 
-import { IProductsCollectionGenerics, SORT_DIRECTION_PARAMS } from "./App.types"
-import { api } from "./FakeApi"
+type TPage = "products" | "users"
 
 class AppStore {
-  products = new Collection<IProductsCollectionGenerics>({
-    fetchFn: () => api.getProducts(),
-    sortDirectionParams: SORT_DIRECTION_PARAMS,
-  })
+  page: TPage = "products"
 
   constructor() {
     makeAutoObservable(this)
   }
-}
 
-export const AppStoreObj = {
-  products: {},
+  setPage = (page: TPage) => {
+    this.page = page
+  }
 }
 
 export const app = new AppStore()
