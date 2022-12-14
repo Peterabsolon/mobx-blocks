@@ -8,7 +8,7 @@ react-query wannabe for people who like MobX or keeping their logic and view lay
 
 Manages a list of data, filtering, pagination
 
-[Usage](https://github.com/Peterabsolon/mobx-blocks/blob/main/src/demo/src/App.store.ts#L8)
+[Usage](https://github.com/Peterabsolon/mobx-blocks/blob/main/src/demo/src/Products/Products.store.tsx#L9)
 
 [Source](https://github.com/Peterabsolon/mobx-blocks/blob/main/src/lib/Collection.ts#L7)
 
