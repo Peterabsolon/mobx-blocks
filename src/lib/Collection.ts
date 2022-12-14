@@ -270,7 +270,7 @@ export class Collection<T extends ICollectionGenerics = ICollectionGenericsDefau
     this.orderBy = undefined
     this.orderAscending = false
     this.page = 1
-    this.pageSize = 20
+    this.pageSize = PAGE_SIZE_DEFAULT
 
     this.fetching = false
     this.fetchErr = undefined
