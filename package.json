@@ -1,6 +1,6 @@
 {
   "name": "mobx-blocks",
-  "version": "0.0.0-rc3",
+  "version": "0.0.0-rc4",
   "description": "react-query wannabe for people who like MobX or keeping their logic and view layers separate",
   "main": "build/index.js",
   "types": "build/types/index.d.ts",
@@ -13,7 +13,7 @@
     "coverage": "npm run test -- --coverage",
     "prepare": "husky install",
     "format": "prettier --config .prettierrc --write 'src/**/*.{ts,tsx}'",
-    "trypublish": "npm publish || true"
+    "trypublish": "npm run build && npm publish || true"
   },
   "repository": {
     "type": "git",
