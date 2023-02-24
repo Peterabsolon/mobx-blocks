@@ -13,6 +13,7 @@ export class CursorPagination {
   // ====================================================
   // Model
   // ====================================================
+  page = 1
   pageSize?: number = 20
 
   prev?: string = undefined
@@ -61,11 +62,13 @@ export class CursorPagination {
   goToNext = () => {
     this.current = this.next
     this.props.onChange(this.next)
+    this.page += 1
   }
 
   goToPrev = () => {
     const current = this.current
     this.current = this.next
     this.next = current
+    this.page -= 1
   }
 }
