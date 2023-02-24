@@ -4,6 +4,11 @@ export interface ISortingProps {
   onChange: () => void
 }
 
+export interface ISortingParams<TSortBy extends string | undefined = string> {
+  sortBy?: TSortBy
+  sortAscending?: boolean
+}
+
 export class Sorting<TSortBy extends string | undefined = string> {
   // ====================================================
   // Model
@@ -15,7 +20,7 @@ export class Sorting<TSortBy extends string | undefined = string> {
     makeAutoObservable(this)
   }
 
-  get params() {
+  get params(): ISortingParams {
     if (!this.key) {
       return {}
     }

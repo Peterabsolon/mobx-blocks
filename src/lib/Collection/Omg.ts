@@ -1,41 +1,20 @@
-// type TPaginationType = "foo" | "bar"
+import { CursorPagination } from "../CursorPagination"
+import { Collection } from "./Collection"
 
-// interface IAwesomeProps<TPagination extends TPaginationType> {
-//   pagination: TPagination extends "foo" ? PaginationFoo : PaginationBar
-// }
+interface IUser {
+  id: string
+  foo: string
+}
 
-// class PaginationFoo {
-//   foo = ""
+const users = new Collection({
+  fetchFn: () => {
+    return Promise.resolve({
+      data: [] as IUser[],
+      nextPageCursor: "123",
+    })
+  },
+  defaultFilters: { qux: "qux" },
+  pagination: CursorPagination,
+})
 
-//   get params() {
-//     return { foo: this.foo }
-//   }
-// }
-
-// class PaginationBar {
-//   bar = ""
-
-//   get params() {
-//     return { bar: this.bar }
-//   }
-// }
-
-// class Awesome<TPagination extends "foo" | "bar"> {
-//   constructor(props: IAwesomeProps<TPagination>) {
-//     console.log(props)
-//   }
-
-//   someFn = (arg: TPagination extends "foo" ? { foo: string } : { bar: string }) => {
-//     if ("foo" in arg) {
-//       console.log(arg.foo)
-//     } else {
-//       console.log(arg.bar)
-//     }
-//   }
-// }
-
-// const awesome = new Awesome<"foo">({
-//   pagination: new PaginationFoo(),
-// })
-
-// awesome.someFn("foo")
+users.fetch({})

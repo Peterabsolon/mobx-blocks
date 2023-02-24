@@ -2,22 +2,16 @@ import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
-import {
-  ICollectionConfig,
-  IFetchFnCursorOptions,
-  IFetchFnOptions,
-  TFetchCursorFnResult,
-  TFetchFnResult,
-} from "./Collection.types"
-import { Pagination } from "../Pagination"
-import { CursorPagination } from "../CursorPagination"
+import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
+import { IPaginationParams, Pagination } from "../Pagination"
+import { CursorPagination, ICursorPaginationParams } from "../CursorPagination"
 import { Sorting } from "../Sorting"
 
 export class Collection<
   TItem,
   TFilters extends Record<string, any>,
   TSortBy extends string,
-  TPagination extends typeof Pagination | typeof CursorPagination
+  TPagination extends typeof Pagination | typeof CursorPagination | undefined
 > {
   // ====================================================
   // Model
@@ -177,26 +171,20 @@ export class Collection<
     this.fetching = true
 
     try {
-      let res: TFetchFnResult<TItem> | TFetchCursorFnResult<TItem>
+      const paginationParams = this.pagination
+        ? this.pagination.params
+        : this.cursorPagination
+        ? this.cursorPagination.params
+        : {}
 
-      if (this.pagination) {
-        res = await fetchFn({
-          ...this.pagination.params,
-          ...this.sorting.params,
-          ...this.filters,
-        })
-      } else if (this.cursorPagination instanceof CursorPagination) {
-        res = await fetchFn({
-          ...this.cursorPagination.params,
-          ...this.sorting.params,
-          ...this.filters,
-        })
-      } else {
-        res = await fetchFn({
-          ...this.sorting.params,
-          ...this.filters,
-        })
-      }
+      const params = { ...this.sorting.params, ...this.filters, ...paginationParams } as TFilters &
+        (TPagination extends typeof Pagination
+          ? IPaginationParams
+          : TPagination extends typeof CursorPagination
+          ? ICursorPaginationParams
+          : IAnyObject)
+
+      const res = await fetchFn(params)
 
       this.data.replace(res.data)
 
@@ -338,20 +326,3 @@ export class Collection<
 
 // export const createCollection = <T extends ICollectionGenerics>(props: ICollectionConfig<T>) =>
 //   new Collection<T>(props)
-
-interface IUser {
-  id: string
-  foo: string
-}
-
-const users = new Collection({
-  fetchFn: () =>
-    Promise.resolve({
-      data: [] as IUser[],
-      totalCount: 10,
-    }),
-  defaultFilters: { qux: "qux" },
-  pagination: CursorPagination,
-})
-
-users.fetch({})

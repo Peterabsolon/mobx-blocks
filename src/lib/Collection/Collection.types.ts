@@ -1,5 +1,6 @@
 import { ICursorPaginationParams, CursorPagination } from "../CursorPagination"
 import { IPaginationParams, Pagination } from "../Pagination"
+import type { ISortingParams } from "../Sorting"
 
 export interface ICollectionGenerics {
   /**
@@ -41,7 +42,7 @@ export interface ICollectionConfig<
   TItem,
   TFilters extends Record<string, any>,
   TSortBy extends string | undefined,
-  TPagination extends typeof Pagination | typeof CursorPagination
+  TPagination extends typeof Pagination | typeof CursorPagination | undefined
 > {
   /**
    * Pagination module imported from "mobx-blocks"
@@ -53,8 +54,9 @@ export interface ICollectionConfig<
   /**
    * The method through which the Collection fetches the data from your API
    */
-  fetchFn: <TPagination extends typeof Pagination | typeof CursorPagination | undefined>(
+  fetchFn: (
     queryParams: TFilters &
+      ISortingParams<TSortBy> &
       (TPagination extends typeof Pagination
         ? IPaginationParams
         : TPagination extends typeof CursorPagination
@@ -62,8 +64,8 @@ export interface ICollectionConfig<
         : IAnyObject)
   ) => Promise<
     TPagination extends typeof CursorPagination
-      ? TFetchCursorFnResult<TItem>
-      : TFetchFnResult<TItem>
+      ? { data: TItem[]; nextPageCursor?: string }
+      : { data: TItem[]; totalCount: number }
   >
 
   /**
