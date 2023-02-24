@@ -1,2 +1,3 @@
 export * from "./Collection"
-export * from "./Collection.types"
+export * from "./CursorPagination"
+export * from "./Pagination"

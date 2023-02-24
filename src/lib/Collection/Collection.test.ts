@@ -1,19 +1,7 @@
 import { toJS } from "mobx"
-import { Collection, createCollection } from "./Collection"
-
-interface IFilters {
-  foo?: string
-  bar?: number
-  baz?: { qux: boolean }
-}
-
-interface IGenerics {
-  id: string
-  data: { id: string; name?: string }
-  filters: IFilters
-  orderBy: "id" | "name"
-  orderDirection: "asc" | "desc"
-}
+import { CursorPagination } from "../CursorPagination"
+import { Pagination } from "../Pagination"
+import { Collection } from "./Collection"
 
 const fetchFn = jest.fn(() =>
   Promise.resolve({
@@ -29,7 +17,7 @@ describe("Collection", () => {
 
   describe("fetch", () => {
     it("performs fetch API request, saves data to state", async () => {
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       c.fetch()
 
       expect(c.fetching).toBe(true)
@@ -39,58 +27,72 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("performs fetch API request with filters passed as object", async () => {
+    it("calls config.fetchFn with filters passed as object", async () => {
       const filters = { foo: "bar" }
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       await c.fetch({ filters })
 
       expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("performs fetch API request with filters passed as string", async () => {
+    it("calls config.fetchFn with filters passed as string", async () => {
       const query = "?foo=bar"
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       await c.fetch({ query })
 
       expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
 
-    it("performs fetch API request with default filters", async () => {
+    it("calls config.fetchFn with default filters", async () => {
       const filters = { foo: "bar" }
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultFilters: filters })
+      const c = new Collection({ fetchFn, defaultFilters: filters })
       await c.fetch()
 
       expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("performs fetch API request with both default filters and filters passed as argument", async () => {
-      const defaultFilters = { foo: "foo" }
+    it("calls config.fetchFn with both default filters and filters passed as argument", async () => {
+      const defaultFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, defaultFilters })
       await c.fetch({ filters })
 
       expect(fetchFn).toBeCalledWith({ ...defaultFilters, ...filters })
     })
 
-    it("performs fetch API request with filters passed as argument only when opts.clearFilters is true", async () => {
-      const defaultFilters = { foo: "foo" }
+    it("calls config.fetchFn with filters passed as argument only when opts.clearFilters is true", async () => {
+      const defaultFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, defaultFilters })
       await c.fetch({ filters, clearFilters: true })
 
       expect(fetchFn).toBeCalledWith(filters)
+    })
+
+    it("calls config.fetchFn with page/pageSize params if Pagination module used", async () => {
+      const c = new Collection({ fetchFn, pagination: Pagination })
+      await c.fetch()
+
+      expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 20 })
+    })
+
+    it("calls config.fetchFn with nextPageToken params if CursorPagination module used", async () => {
+      const c = new Collection({ fetchFn, pagination: CursorPagination })
+      await c.fetch()
+
+      expect(fetchFn).toBeCalledWith({ nextPageToken: undefined })
     })
 
     it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
       const replaceStateSpy = jest.spyOn(window.history, "replaceState")
       const filters = { foo: "bar", bar: 2 }
 
-      const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
+      const c = new Collection({ fetchFn, syncParamsToUrl: true })
       await c.fetch({ filters })
 
       expect(replaceStateSpy).toHaveBeenCalledWith("", "", "/?bar=2&foo=bar")
@@ -100,7 +102,7 @@ describe("Collection", () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       await c.fetch()
 
       expect(c.fetchErr).toBe(error)
@@ -109,7 +111,7 @@ describe("Collection", () => {
     it("rethrows error if opts.shouldThrowError is true", async () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
 
       try {
         await c.fetch({ shouldThrowError: true })
@@ -124,7 +126,7 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const errorHandlerFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn, errorHandlerFn })
+      const c = new Collection({ fetchFn, errorHandlerFn })
       await c.fetch()
 
       expect(errorHandlerFn).toBeCalledWith(error)
@@ -132,7 +134,7 @@ describe("Collection", () => {
 
     // TODO: Use for fetchMore()
     it.skip("appends new data to exisitng", async () => {
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       await c.fetch()
       expect(c.data.length).toBe(1)
 
@@ -148,7 +150,7 @@ describe("Collection", () => {
 
       const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      const c = new Collection({ fetchFn, searchFn })
       c.search("someQuery")
 
       // Fast-forward time
@@ -168,7 +170,7 @@ describe("Collection", () => {
     it("does nothing when searchFn not passed", async () => {
       jest.useFakeTimers()
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
 
       const promise = c.search("someQuery")
       jest.runAllTimers()
@@ -182,7 +184,7 @@ describe("Collection", () => {
 
       const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      const c = new Collection({ fetchFn, searchFn })
       c.search("someQuery")
       c.search("someOtherQuery")
 
@@ -201,7 +203,7 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const searchFn = jest.fn(() => Promise.reject(error))
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      const c = new Collection({ fetchFn, searchFn })
 
       try {
         const promise = c.search("someQuery")
@@ -219,7 +221,7 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const searchFn = jest.fn(() => Promise.reject(error))
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      const c = new Collection({ fetchFn, searchFn })
 
       try {
         const promise = c.search("someQuery", { shouldThrowError: true })
@@ -237,7 +239,7 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const errorHandlerFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn, errorHandlerFn })
+      const c = new Collection({ fetchFn, searchFn, errorHandlerFn })
       await c.search("someQuery")
 
       expect(errorHandlerFn).toBeCalledWith(error)
@@ -248,7 +250,7 @@ describe("Collection", () => {
     it("saves filters to state, clears other state", async () => {
       const filters = { foo: "foo", bar: 2, baz: { qux: false } }
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       c.setFetchParams(filters)
       expect(c.filters).toEqual(filters)
 
@@ -263,7 +265,7 @@ describe("Collection", () => {
       const filters = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       c.setFetchParams(filters)
       c.clearFetchParam("foo")
 
@@ -276,7 +278,7 @@ describe("Collection", () => {
       const filters = { foo: "foo", bar: 3 }
       const fetchFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       c.setFetchParams(filters)
       c.clearFetchParams()
 
@@ -286,10 +288,10 @@ describe("Collection", () => {
 
   describe("resetFetchParams", () => {
     it("resets fetch filters to defaults passed through the constructor", () => {
-      const defaultFilters = { foo: "foo", bar: 3 }
+      const defaultFilters = { foo: "foo", bar: 3, baz: { qux: true } }
       const fetchFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, defaultFilters })
       c.mergeFetchParams({ baz: { qux: false } })
       c.resetFetchParams()
 
@@ -299,7 +301,7 @@ describe("Collection", () => {
     it("clears fetch filters if not defaults passed", () => {
       const fetchFn = jest.fn()
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       c.mergeFetchParams({ baz: { qux: false } })
       c.resetFetchParams()
 
@@ -309,7 +311,7 @@ describe("Collection", () => {
 
   describe("syncParamsToUrl", () => {
     it("synchronizes filters to URL on change when props.syncParamsToUrl", async () => {
-      const c = new Collection<IGenerics>({ fetchFn, syncParamsToUrl: true })
+      const c = new Collection({ fetchFn, syncParamsToUrl: true })
 
       await c.fetch({ filters: { foo: "bar" } })
       expect(window.location.search).toBe("?foo=bar")
@@ -332,7 +334,7 @@ describe("Collection", () => {
     it("clears data and related state", async () => {
       const filters = { foo: "bar" }
 
-      const c = new Collection<IGenerics>({ fetchFn })
+      const c = new Collection({ fetchFn })
       await c.fetch({ filters })
       c.resetState()
 
@@ -348,7 +350,7 @@ describe("Collection", () => {
       const fetchFn = jest.fn(() => Promise.reject(error))
       const searchFn = jest.fn(() => Promise.reject(error))
 
-      const c = new Collection<IGenerics>({ fetchFn, searchFn })
+      const c = new Collection({ fetchFn, searchFn })
       await c.fetch()
       await c.search("q")
       expect(c.fetchErr).toBe(error)
@@ -361,9 +363,9 @@ describe("Collection", () => {
   })
 })
 
-describe("createCollection", () => {
-  it("creates a Collection instance", () => {
-    const result = createCollection({ fetchFn })
-    expect(result).toBeInstanceOf(Collection)
-  })
-})
+// describe("createCollection", () => {
+//   it("creates a Collection instance", () => {
+//     const result = createCollection({ fetchFn })
+//     expect(result).toBeInstanceOf(Collection)
+//   })
+// })

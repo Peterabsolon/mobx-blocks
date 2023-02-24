@@ -4,9 +4,13 @@ import { faker } from "@faker-js/faker"
 import { IProduct } from "./Products/Products.types"
 import { IUser } from "./Users/Users.types"
 
-interface IParams {
-  orderBy?: string
-  orderAscending?: boolean
+export type TSortBy = "id" | "name"
+
+export interface IApiParams {
+  id?: string
+  name?: string
+  sortBy?: TSortBy
+  sortAscending?: boolean
   page?: number
   pageSize?: number
 }
@@ -35,14 +39,11 @@ const isFuzzyMatch = (a?: string | number, b?: string | number) =>
     .includes(String(b)?.toLowerCase() || "")
 
 const buildResponse = <T extends IAnyObject>(
-  { orderBy, orderAscending, page, pageSize, ...filters }: IParams,
+  { sortBy, sortAscending, page, pageSize, ...filters }: IApiParams,
   table: T[]
 ) => {
   let data = [...table]
   let totalCount = 1000
-
-  console.log("table.length", table.length)
-  console.log("orderAscending", orderAscending)
 
   // Filter
   Object.entries(filters).forEach(([key, value]) => {
@@ -50,18 +51,18 @@ const buildResponse = <T extends IAnyObject>(
   })
 
   // Sort
-  if (orderBy && typeof orderAscending !== "undefined") {
+  if (sortBy && typeof sortAscending !== "undefined") {
     data = data.sort((a, z) => {
-      const first = orderAscending ? a : z
-      const last = orderAscending ? z : a
+      const first = sortAscending ? a : z
+      const last = sortAscending ? z : a
 
       // If both are numbers, compare values
-      if (typeof first[orderBy] === "number" && typeof last[orderBy] === "number") {
-        return first[orderBy] - last[orderBy]
+      if (typeof first[sortBy] === "number" && typeof last[sortBy] === "number") {
+        return first[sortBy] - last[sortBy]
       }
 
       // Else compare by casting to string
-      return String(first[orderBy]).localeCompare(String(last[orderBy]))
+      return String(first[sortBy]).localeCompare(String(last[sortBy]))
     })
   }
 
@@ -73,8 +74,6 @@ const buildResponse = <T extends IAnyObject>(
     data = data.slice(from, to)
   }
 
-  console.log("data.length", data.length)
-
   return { data, totalCount }
 }
 
@@ -82,7 +81,7 @@ class FakeApi {
   products = times(1000).map(mockProduct)
   users = times(1000).map(mockUser)
 
-  getProducts = async (params: IParams) => {
+  getProducts = async (params: IApiParams) => {
     console.log({ params })
     try {
       await sleep(250)
@@ -93,7 +92,7 @@ class FakeApi {
     }
   }
 
-  getUsers = async (params: IParams) => {
+  getUsers = async (params: IApiParams) => {
     try {
       await sleep(250)
       return buildResponse<IUser>(params, this.users)

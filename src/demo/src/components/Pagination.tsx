@@ -1,10 +1,10 @@
-import { times } from "lodash"
+// import { times } from "lodash"
 import { observer } from "mobx-react-lite"
 
 export interface IPaginationProps {
   onGoToPrev: () => void
   onGoToNext: () => void
-  onGoTo: (page: number) => void
+  onGoTo?: (page: number) => void
   page?: number
   pagesCount: number
 }
@@ -18,11 +18,11 @@ export const Pagination = observer(
             «
           </button>
 
-          {times(pagesCount).map((_, index) => (
+          {/* {times(pagesCount).map((_, index) => (
             <button className="btn" onClick={onGoToPrev}>
               {index + 1}
             </button>
-          ))}
+          ))} */}
 
           <button className="btn" onClick={onGoToNext}>
             »

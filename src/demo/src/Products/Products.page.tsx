@@ -4,6 +4,7 @@ import cx from "classnames"
 // import { Pagination } from "../components"
 
 import { store } from "./Products.store"
+import { Pagination } from "../components"
 
 export const Products = observer(() => {
   const { products } = store
@@ -15,6 +16,8 @@ export const Products = observer(() => {
   if (!products.initialized) {
     return <span>Initializing...</span>
   }
+
+  console.log("products.cursorPagination", products.cursorPagination)
 
   return (
     <div>
@@ -33,16 +36,16 @@ export const Products = observer(() => {
                 className="input-bordered input input-sm"
                 placeholder="ID"
                 value={products.filters.id || ""}
-                onChange={(evt) => products.fetch({ filters: { id: Number(evt.target.value) } })}
+                onChange={(evt) => products.fetch({ filters: { id: evt.target.value } })}
               />
 
               <button
-                className={cx("btn-ghost btn-sm btn ml-2", {
-                  "btn-active": products.orderBy === "id",
+                className={cx("btn btn-ghost btn-sm ml-2", {
+                  "btn-active": products.sorting.key === "id",
                 })}
-                onClick={() => products.setOrderHelper("id")}
+                onClick={() => products.sorting.setNewKey("id")}
               >
-                {products.orderAscending ? "↑" : "↓"}
+                {products.sorting.ascending ? "↑" : "↓"}
               </button>
             </th>
 
@@ -55,16 +58,24 @@ export const Products = observer(() => {
               />
 
               <button
-                className={cx("btn-ghost btn-sm btn ml-2", {
-                  "btn-active": products.orderBy === "name",
+                className={cx("btn btn-ghost btn-sm ml-2", {
+                  "btn-active": products.sorting.key === "name",
                 })}
-                onClick={() => products.setOrderHelper("name")}
+                onClick={() => products.sorting.setNewKey("name")}
               >
-                {products.orderAscending ? "↑" : "↓"}
+                {products.sorting.ascending ? "↑" : "↓"}
               </button>
             </th>
           </tr>
         </thead>
+
+        {products.cursorPagination && (
+          <Pagination
+            onGoToPrev={products.cursorPagination.goToPrev}
+            onGoToNext={products.cursorPagination.goToNext}
+            pagesCount={10}
+          />
+        )}
 
         {products.fetching ? (
           "Loading..."

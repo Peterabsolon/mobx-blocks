@@ -1,12 +1,11 @@
 import { makeAutoObservable } from "mobx"
 import { Collection } from "mobx-blocks"
 
-import { api } from "../FakeApi"
-
-import { IUsersCollectionGenerics } from "./Users.types"
+import { api, IApiParams, TSortBy } from "../FakeApi"
+import { IUser } from "./Users.types"
 
 class UsersPageStore {
-  users = new Collection<IUsersCollectionGenerics>({
+  users = new Collection<IUser, IApiParams, TSortBy>({
     fetchFn: (params) => api.getUsers(params),
   })
 

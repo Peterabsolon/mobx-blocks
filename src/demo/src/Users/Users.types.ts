@@ -15,4 +15,5 @@ export interface IUsersCollectionGenerics {
   filters: {}
   orderBy: TUsersOrderBy
   orderDirection: TOrderDirection
+  pagination: IAnyObject
 }
