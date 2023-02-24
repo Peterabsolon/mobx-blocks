@@ -1,14 +1,13 @@
 import { makeAutoObservable } from "mobx"
 import { Collection, CursorPagination } from "mobx-blocks"
 
-import { api, IApiParams } from "../FakeApi"
-import { IProduct } from "./Products.types"
+import { api, IApiParams, TSortBy } from "../FakeApi"
 
 class ProductsPageStore {
   products = new Collection({
     pagination: CursorPagination,
     pageSize: 5,
-    sortBy: ["id", "name"] as const,
+    sortBy: "id" as TSortBy,
     fetchFn: (params: IApiParams) => {
       console.log({ params })
       return api.getProducts(params)
