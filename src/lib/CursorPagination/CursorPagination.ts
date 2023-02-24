@@ -7,6 +7,7 @@ export interface ICursorPaginationProps {
 
 export interface ICursorPaginationParams {
   pageCursor?: string
+  pageSize: number
 }
 
 export class CursorPagination {
@@ -14,7 +15,7 @@ export class CursorPagination {
   // Model
   // ====================================================
   page = 1
-  pageSize?: number = 20
+  pageSize = 20
 
   prev?: string = undefined
   current?: string = undefined
@@ -37,6 +38,7 @@ export class CursorPagination {
   get params(): ICursorPaginationParams {
     return {
       pageCursor: this.current,
+      pageSize: this.pageSize,
     }
   }
 
