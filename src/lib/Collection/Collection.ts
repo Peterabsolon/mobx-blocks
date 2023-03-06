@@ -61,8 +61,8 @@ export class Collection<
       })
     }
 
-    if (config.defaultFilters) {
-      this.filtersMap.replace(config.defaultFilters)
+    if (config.initialFilters) {
+      this.filtersMap.replace(config.initialFilters)
     }
 
     if (config.syncParamsToUrl) {
@@ -254,7 +254,7 @@ export class Collection<
    * Reset fetch filters to defaults (passed in the constructor)
    */
   resetFetchParams = () => {
-    this.filtersMap.replace(this.config.defaultFilters || {})
+    this.filtersMap.replace(this.config.initialFilters || {})
   }
 
   /**

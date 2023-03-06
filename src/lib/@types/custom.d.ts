@@ -3,3 +3,5 @@ interface IAnyObject {
 }
 
 type TAnyRecord = Record<string, any>
+
+type TUnknownRecord = Record<string, unknown>

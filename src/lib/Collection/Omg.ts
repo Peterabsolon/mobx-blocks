@@ -13,7 +13,7 @@ const users = new Collection({
       nextPageCursor: "123",
     })
   },
-  defaultFilters: { qux: "qux" },
+  initialFilters: { qux: "qux" },
   pagination: CursorPagination,
 })
 

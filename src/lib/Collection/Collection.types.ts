@@ -82,7 +82,7 @@ export interface ICollectionConfig<
    * The default query params
    * @example { archived: false }
    */
-  defaultFilters?: TFilters
+  initialFilters?: TFilters
 
   /**
    * Set page size to use

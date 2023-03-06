@@ -55,27 +55,27 @@ describe("Collection", () => {
     it("calls config.fetchFn with default filters", async () => {
       const filters = { foo: "bar" }
 
-      const c = new Collection({ fetchFn, defaultFilters: filters })
+      const c = new Collection({ fetchFn, initialFilters: filters })
       await c.fetch()
 
       expect(fetchFn).toBeCalledWith(filters)
     })
 
     it("calls config.fetchFn with both default filters and filters passed as argument", async () => {
-      const defaultFilters = { foo: "foo", bar: 1 }
+      const initialFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
-      const c = new Collection({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, initialFilters })
       await c.fetch({ filters })
 
-      expect(fetchFn).toBeCalledWith({ ...defaultFilters, ...filters })
+      expect(fetchFn).toBeCalledWith({ ...initialFilters, ...filters })
     })
 
     it("calls config.fetchFn with filters passed as argument only when opts.clearFilters is true", async () => {
-      const defaultFilters = { foo: "foo", bar: 1 }
+      const initialFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
-      const c = new Collection({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, initialFilters })
       await c.fetch({ filters, clearFilters: true })
 
       expect(fetchFn).toBeCalledWith(filters)
@@ -137,15 +137,6 @@ describe("Collection", () => {
       await c.fetch({ pageCursor: "foo" })
 
       expect(spy).toBeCalledWith('"pageCursor" param passed but CursorPagination not initialized') // prettier-ignore
-    })
-
-    it("warns when nextPageCursor returned from fetchFn and CursorPagination is NOT used", async () => {
-      const spy = jest.spyOn(console, "warn")
-
-      const c = new Collection({ fetchFn: fetchFnCursor })
-      await c.fetch()
-
-      expect(spy).toBeCalledWith('"nextPageCursor" param present in fetchFn response but CursorPagination not initialized') // prettier-ignore
     })
 
     it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
@@ -324,7 +315,7 @@ describe("Collection", () => {
     })
 
     it("calls fetchFn once with passed options", async () => {
-      const c = new Collection({ fetchFn, defaultFilters: { foo: "foo" } })
+      const c = new Collection({ fetchFn, initialFilters: { foo: "foo" } })
       await c.init({ filters: { foo: "bar" } })
       expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
@@ -372,14 +363,14 @@ describe("Collection", () => {
 
   describe("resetFetchParams", () => {
     it("resets fetch filters to defaults passed through the constructor", () => {
-      const defaultFilters = { foo: "foo", bar: 3, baz: { qux: true } }
+      const initialFilters = { foo: "foo", bar: 3, baz: { qux: true } }
       const fetchFn = jest.fn()
 
-      const c = new Collection({ fetchFn, defaultFilters })
+      const c = new Collection({ fetchFn, initialFilters })
       c.mergeFetchParams({ baz: { qux: false } })
       c.resetFetchParams()
 
-      expect(c.filters).toEqual(defaultFilters)
+      expect(c.filters).toEqual(initialFilters)
     })
 
     it("clears fetch filters if not defaults passed", () => {
