@@ -1,49 +1,18 @@
-import { uniqueId, times } from "lodash"
-import { faker } from "@faker-js/faker"
+import { times } from "lodash"
 
-import { IProduct } from "./Products/Products.types"
-import { IUser } from "./Users/Users.types"
+import type { IProduct } from "../Products/Products.types"
+import type { IUser } from "../Users/Users.types"
 
-export type TSortBy = "id" | "name"
+import type { IApiParams } from "./FakeApi.types"
+import { isFuzzyMatch, mockProduct, mockUser, sleep } from "./FakeApi.utils"
 
-export interface IApiParams {
-  id?: string
-  name?: string
-  sortBy?: TSortBy
-  sortAscending?: boolean
-  page?: number
-  pageSize?: number
-}
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-const mockProduct = (index: number): IProduct => {
-  const adjective = faker.word.adjective()
-  const adjectiveOther = faker.word.adjective()
-  const name = faker.commerce.product()
-
-  return {
-    id: Number(uniqueId()),
-    name: `${adjective} ${adjectiveOther} ${name}`,
-  }
-}
-
-const mockUser = (index: number): IUser => ({
-  id: uniqueId(),
-  name: faker.name.fullName(),
-})
-
-const isFuzzyMatch = (a?: string | number, b?: string | number) =>
-  String(a)
-    ?.toLowerCase()
-    .includes(String(b)?.toLowerCase() || "")
+const TOTAL_COUNT = 10
 
 const buildResponse = <T extends IAnyObject>(
   { sortBy, sortAscending, page, pageSize, ...filters }: IApiParams,
   table: T[]
 ) => {
   let data = [...table]
-  let totalCount = 1000
 
   // Filter
   Object.entries(filters).forEach(([key, value]) => {
@@ -74,15 +43,14 @@ const buildResponse = <T extends IAnyObject>(
     data = data.slice(from, to)
   }
 
-  return { data, totalCount }
+  return { data, totalCount: TOTAL_COUNT }
 }
 
 class FakeApi {
-  products = times(1000).map(mockProduct)
-  users = times(1000).map(mockUser)
+  products = times(TOTAL_COUNT).map(mockProduct)
+  users = times(TOTAL_COUNT).map(mockUser)
 
   getProducts = async (params: IApiParams) => {
-    console.log({ params })
     try {
       await sleep(250)
       return buildResponse<IProduct>(params, this.products)

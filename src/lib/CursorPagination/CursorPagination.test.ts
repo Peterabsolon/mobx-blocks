@@ -3,13 +3,13 @@ import { CursorPagination } from "./CursorPagination"
 describe("CursorPagination", () => {
   it("can fetch more initially", () => {
     const pagination = new CursorPagination({ onChange: console.log })
-    expect(pagination.hasMore).toBe(true)
+    expect(pagination.canGoToNext).toBe(true)
   })
 
-  it("sets thisPageToken on init call", () => {
+  it("sets current token", () => {
     const pagination = new CursorPagination({ onChange: console.log })
-    pagination.init("someToken")
+    pagination.setCurrent("someToken")
     expect(pagination.current).toBe("someToken")
-    expect(pagination.next).toBe(undefined)
+    expect(pagination.next).toBe(null)
   })
 })

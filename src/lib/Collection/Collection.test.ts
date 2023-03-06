@@ -91,9 +91,8 @@ describe("Collection", () => {
     it("calls config.fetchFn with returned pageCursor returned from previous call if CursorPagination module used", async () => {
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch()
-      expect(fetchFnCursor).toBeCalledWith({ pageCursor: undefined, pageSize: 20 })
-      await c.fetch()
-      expect(fetchFnCursor).toBeCalledWith({ pageCursor: "foo", pageSize: 20 })
+      expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 20 })
+      expect(c.cursorPagination?.next).toBe("foo")
     })
 
     it("calls config.fetchFn with passed in pageCursor if CursorPagination module used", async () => {
@@ -105,7 +104,7 @@ describe("Collection", () => {
     it("calls config.fetchFn with passed in pageSize if CursorPagination module used", async () => {
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch({ pageSize: 10 })
-      expect(fetchFnCursor).toBeCalledWith({ pageSize: 10 })
+      expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 10 })
     })
 
     it("calls config.fetchFn with passed in pageSize if Pagination module used", async () => {

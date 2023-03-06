@@ -2,6 +2,8 @@
 import { observer } from "mobx-react-lite"
 
 export interface IPaginationProps {
+  canGoToNext?: boolean
+  canGoToPrev?: boolean
   onGoToPrev: () => void
   onGoToNext: () => void
   onGoTo?: (page: number) => void
@@ -10,11 +12,11 @@ export interface IPaginationProps {
 }
 
 export const Pagination = observer(
-  ({ onGoToNext, onGoToPrev, onGoTo, pagesCount }: IPaginationProps) => {
+  ({ onGoToNext, onGoToPrev, onGoTo, pagesCount, canGoToNext, canGoToPrev }: IPaginationProps) => {
     return (
       <div>
         <div className="btn-group">
-          <button className="btn" onClick={onGoToPrev}>
+          <button className="btn" onClick={onGoToPrev} disabled={!canGoToPrev}>
             «
           </button>
 
@@ -24,7 +26,7 @@ export const Pagination = observer(
             </button>
           ))} */}
 
-          <button className="btn" onClick={onGoToNext}>
+          <button className="btn" onClick={onGoToNext} disabled={!canGoToNext}>
             »
           </button>
         </div>

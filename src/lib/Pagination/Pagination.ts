@@ -50,6 +50,11 @@ export class Pagination {
   // ====================================================
   // Public
   // ====================================================
+  init = (page?: number, pageSize?: number) => {
+    if (page) this.page = page
+    if (pageSize) this.pageSize = pageSize
+  }
+
   setTotalCount = (count: number) => {
     this.totalCount = count
   }

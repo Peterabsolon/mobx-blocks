@@ -3,3 +3,7 @@ interface IAnyObject {
 }
 
 type TAnyRecord = Record<string, any>
+
+interface IObjectWithId extends IAnyObject {
+  id: string
+}

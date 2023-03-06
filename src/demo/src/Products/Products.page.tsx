@@ -17,8 +17,6 @@ export const Products = observer(() => {
     return <span>Initializing...</span>
   }
 
-  console.log("products.cursorPagination", products.cursorPagination)
-
   return (
     <div>
       <input
@@ -40,7 +38,7 @@ export const Products = observer(() => {
               />
 
               <button
-                className={cx("btn btn-ghost btn-sm ml-2", {
+                className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.sorting.key === "id",
                 })}
                 onClick={() => products.sorting.setNewKey("id")}
@@ -58,7 +56,7 @@ export const Products = observer(() => {
               />
 
               <button
-                className={cx("btn btn-ghost btn-sm ml-2", {
+                className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.sorting.key === "name",
                 })}
                 onClick={() => products.sorting.setNewKey("name")}
@@ -71,6 +69,8 @@ export const Products = observer(() => {
 
         {products.cursorPagination && (
           <Pagination
+            canGoToPrev={products.cursorPagination.canGoToPrev}
+            canGoToNext={products.cursorPagination.canGoToNext}
             onGoToPrev={products.cursorPagination.goToPrev}
             onGoToNext={products.cursorPagination.goToNext}
             pagesCount={10}

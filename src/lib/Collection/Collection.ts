@@ -57,7 +57,7 @@ export class Collection<
     if (this.config.pagination === CursorPagination) {
       this.cursorPagination = new CursorPagination({
         pageSize: this.config.pageSize,
-        onChange: () => this.fetch(),
+        onChange: (params) => this.fetch(params as IFetchFnOptions<TFilters, TSortBy>),
       })
     }
 
@@ -143,32 +143,27 @@ export class Collection<
     const { fetchFn, errorHandlerFn } = this.config
     const { clearFilters, query, sortBy, sortAscending, page, pageSize, pageCursor } = opts
 
-    this.sorting.setParams(sortBy, sortAscending)
-
-    if (this.pagination) {
-      if (page) {
-        this.pagination.page = page
-      }
-
-      if (pageSize) {
-        this.pagination.pageSize = pageSize
-      }
-    }
-
-    if (this.cursorPagination) {
-      if (pageCursor) {
-        this.cursorPagination.init(pageCursor)
-      }
-
-      if (pageSize) {
-        this.cursorPagination.pageSize = pageSize
-      }
-    }
-
     if (pageCursor && !this.cursorPagination) {
       console.warn('"pageCursor" param passed but CursorPagination not initialized')
     }
 
+    /**
+     * Sorting
+     */
+    this.sorting.setParams(sortBy, sortAscending)
+
+    /**
+     * Pagination
+     */
+    if (this.pagination) {
+      this.pagination.init(page, pageSize)
+    } else if (this.cursorPagination) {
+      this.cursorPagination.init(pageCursor, pageSize)
+    }
+
+    /**
+     * Filters
+     */
     const filters = query ? qs.parse(query) : opts.filters
     if (filters) {
       if (clearFilters) this.setFetchParams(filters as TFilters)
@@ -177,41 +172,44 @@ export class Collection<
 
     this.fetching = true
 
-    try {
-      const res = await fetchFn(this.queryParams)
+    return runInAction(async () => {
+      try {
+        const res = await fetchFn(this.queryParams)
 
-      this.data.replace(res.data)
+        this.data.replace(res.data)
 
-      if ("totalCount" in res) {
-        this.totalCount = res.totalCount
-      }
-
-      if ("nextPageCursor" in res && res.nextPageCursor) {
-        if (!this.cursorPagination) {
-          console.warn('"nextPageCursor" param present in fetchFn response but CursorPagination not initialized') // prettier-ignore
-          return
+        if ("totalCount" in res) {
+          this.totalCount = res.totalCount
         }
 
-        this.cursorPagination.setNext(res.nextPageCursor)
+        if (this.cursorPagination) {
+          if ("nextPageCursor" in res) {
+            this.cursorPagination.setNext(res.nextPageCursor || null)
+          }
+
+          if ("prevPageCursor" in res) {
+            this.cursorPagination.setPrev(res.prevPageCursor || null)
+          }
+        }
+
+        return res
+      } catch (err) {
+        this.fetchErr = err
+
+        if (errorHandlerFn) {
+          errorHandlerFn(err)
+        }
+
+        if (opts.shouldThrowError) {
+          throw err
+        }
+
+        return { data: [], totalCount: 0 }
+      } finally {
+        this.fetching = false
+        this.initialized = true
       }
-
-      return res
-    } catch (err) {
-      this.fetchErr = err
-
-      if (errorHandlerFn) {
-        errorHandlerFn(err)
-      }
-
-      if (opts.shouldThrowError) {
-        throw err
-      }
-
-      return { data: [], totalCount: 0 }
-    } finally {
-      this.fetching = false
-      this.initialized = true
-    }
+    })
   }
 
   /**

@@ -1,7 +1,7 @@
 import { makeAutoObservable } from "mobx"
 import { Collection } from "mobx-blocks"
 
-import { api, IApiParams } from "../FakeApi"
+import { api, IApiParams } from "../api"
 
 class UsersPageStore {
   users = new Collection({

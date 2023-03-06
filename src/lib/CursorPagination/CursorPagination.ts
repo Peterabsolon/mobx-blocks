@@ -1,12 +1,12 @@
-import { makeAutoObservable } from "mobx"
+import { makeAutoObservable, runInAction } from "mobx"
 
 export interface ICursorPaginationProps {
   pageSize?: number
-  onChange: (pageCursor?: string) => void
+  onChange: (params: ICursorPaginationParams) => void
 }
 
 export interface ICursorPaginationParams {
-  pageCursor?: string
+  pageCursor: string | null
   pageSize: number
 }
 
@@ -17,9 +17,9 @@ export class CursorPagination {
   page = 1
   pageSize = 20
 
-  prev?: string = undefined
-  current?: string = undefined
-  next?: string = undefined
+  prev: string | null = null
+  current: string | null = null
+  next: string | null = null
 
   // ====================================================
   // Constructor
@@ -37,12 +37,16 @@ export class CursorPagination {
   // ====================================================
   get params(): ICursorPaginationParams {
     return {
-      pageCursor: this.next,
+      pageCursor: this.current,
       pageSize: this.pageSize,
     }
   }
 
-  get hasMore(): boolean {
+  get canGoToPrev(): boolean {
+    return Boolean(this.prev)
+  }
+
+  get canGoToNext(): boolean {
     if (!this.current) {
       return true
     }
@@ -53,24 +57,41 @@ export class CursorPagination {
   // ====================================================
   // Actions
   // ====================================================
-  init = (current: string) => {
-    this.current = current
+  init = (current?: string | null, pageSize?: number) => {
+    this.setCurrent(current)
+    if (pageSize) this.pageSize = pageSize
   }
 
-  setNext = (next: string) => {
+  setCurrent = (current?: string | null) => {
+    this.current = current || null
+  }
+
+  setNext = (next: string | null) => {
     this.next = next
   }
 
+  setPrev = (prev: string | null) => {
+    this.prev = prev
+  }
+
   goToNext = () => {
+    this.prev = this.current
     this.current = this.next
-    this.props.onChange(this.next)
     this.page += 1
+
+    runInAction(() => this.props.onChange(this.params))
   }
 
   goToPrev = () => {
+    if (!this.prev) {
+      return
+    }
+
     const current = this.current
-    this.current = this.next
+    this.current = this.prev
     this.next = current
     this.page -= 1
+
+    runInAction(() => this.props.onChange(this.params))
   }
 }

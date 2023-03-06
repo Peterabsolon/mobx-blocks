@@ -1,7 +1,7 @@
 import { makeAutoObservable } from "mobx"
 import { Collection, CursorPagination } from "mobx-blocks"
 
-import { api, IApiParams, TSortBy } from "../FakeApi"
+import { cursorApi, IApiParamsCursor, TSortBy } from "../api"
 
 class ProductsPageStore {
   products = new Collection({
@@ -9,12 +9,9 @@ class ProductsPageStore {
     pageSize: 5,
     sortBy: "id" as TSortBy,
     errorHandlerFn: (err) => console.log("[ProductsCollection] error: ", err),
-    fetchFn: (params: IApiParams) => {
-      console.log({ params })
-      return api.getProducts(params)
-    },
+    fetchFn: (params: IApiParamsCursor) => cursorApi.getProducts(params),
     searchFn: async (query) => {
-      const res = await api.getProducts({ name: query, page: 1, pageSize: 5 })
+      const res = await cursorApi.getProducts({ name: query, pageSize: 5, pageCursor: null })
       return res.data
     },
   })
