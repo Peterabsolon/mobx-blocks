@@ -8,6 +8,7 @@ class ProductsPageStore {
     pagination: CursorPagination,
     pageSize: 5,
     sortBy: "id" as TSortBy,
+    errorHandlerFn: (err) => console.log("[ProductsCollection] error: ", err),
     fetchFn: (params: IApiParams) => {
       console.log({ params })
       return api.getProducts(params)

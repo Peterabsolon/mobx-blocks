@@ -10,6 +10,13 @@ const fetchFn = jest.fn(() =>
   })
 )
 
+const fetchFnCursor = jest.fn(() =>
+  Promise.resolve({
+    data: [{ id: "1" }],
+    nextPageCursor: "foo",
+  })
+)
+
 describe("Collection", () => {
   afterEach(() => {
     jest.useRealTimers()
@@ -81,11 +88,65 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 20 })
     })
 
-    it("calls config.fetchFn with nextPageToken params if CursorPagination module used", async () => {
-      const c = new Collection({ fetchFn, pagination: CursorPagination })
+    it("calls config.fetchFn with returned pageCursor returned from previous call if CursorPagination module used", async () => {
+      const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
+      await c.fetch()
+      expect(fetchFnCursor).toBeCalledWith({ pageCursor: undefined, pageSize: 20 })
+      await c.fetch()
+      expect(fetchFnCursor).toBeCalledWith({ pageCursor: "foo", pageSize: 20 })
+    })
+
+    it("calls config.fetchFn with passed in pageCursor if CursorPagination module used", async () => {
+      const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
+      await c.fetch({ pageCursor: "foo" })
+      expect(fetchFnCursor).toBeCalledWith({ pageCursor: "foo", pageSize: 20 })
+    })
+
+    it("calls config.fetchFn with passed in pageSize if CursorPagination module used", async () => {
+      const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
+      await c.fetch({ pageSize: 10 })
+      expect(fetchFnCursor).toBeCalledWith({ pageSize: 10 })
+    })
+
+    it("calls config.fetchFn with passed in pageSize if Pagination module used", async () => {
+      const c = new Collection({ fetchFn, pagination: Pagination })
+      await c.fetch({ pageSize: 10 })
+      expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 10 })
+    })
+
+    it("calls config.fetchFn with passed in page if Pagination module used", async () => {
+      const c = new Collection({ fetchFn, pagination: Pagination })
+      await c.fetch({ page: 2 })
+      expect(fetchFn).toBeCalledWith({ page: 2, pageSize: 20 })
+    })
+
+    it("saves pageSize when returned from fetchFn and Pagination is used", async () => {
+      const c = new Collection({ fetchFn, pagination: Pagination })
+      await c.fetch()
+      expect(c.pagination?.pageSize).toBe(20)
+    })
+
+    it("saves pageSize when returned from fetchFn and CursorPagination is used", async () => {
+      const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
+      expect(c.cursorPagination?.pageSize).toBe(20)
+    })
+
+    it("warns when pageCursor passed to fetchFn but CursorPagination is NOT used", async () => {
+      const spy = jest.spyOn(console, "warn")
+
+      const c = new Collection({ fetchFn: fetchFnCursor })
+      await c.fetch({ pageCursor: "foo" })
+
+      expect(spy).toBeCalledWith('"pageCursor" param passed but CursorPagination not initialized') // prettier-ignore
+    })
+
+    it("warns when nextPageCursor returned from fetchFn and CursorPagination is NOT used", async () => {
+      const spy = jest.spyOn(console, "warn")
+
+      const c = new Collection({ fetchFn: fetchFnCursor })
       await c.fetch()
 
-      expect(fetchFn).toBeCalledWith({ nextPageToken: undefined })
+      expect(spy).toBeCalledWith('"nextPageCursor" param present in fetchFn response but CursorPagination not initialized') // prettier-ignore
     })
 
     it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
@@ -243,6 +304,30 @@ describe("Collection", () => {
       await c.search("someQuery")
 
       expect(errorHandlerFn).toBeCalledWith(error)
+    })
+  })
+
+  describe("init", () => {
+    it("calls fetchFn once", async () => {
+      // local mock fn copy so we can assert call times correctly
+      const fetchFn = jest.fn(() =>
+        Promise.resolve({
+          data: [{ id: "1" }],
+          totalCount: 1,
+        })
+      )
+
+      const c = new Collection({ fetchFn })
+      await c.init()
+      expect(fetchFn).toBeCalledWith({})
+      c.init()
+      expect(fetchFn).toBeCalledTimes(1)
+    })
+
+    it("calls fetchFn once with passed options", async () => {
+      const c = new Collection({ fetchFn, defaultFilters: { foo: "foo" } })
+      await c.init({ filters: { foo: "bar" } })
+      expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
   })
 

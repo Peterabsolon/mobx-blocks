@@ -37,7 +37,7 @@ export class CursorPagination {
   // ====================================================
   get params(): ICursorPaginationParams {
     return {
-      pageCursor: this.current,
+      pageCursor: this.next,
       pageSize: this.pageSize,
     }
   }

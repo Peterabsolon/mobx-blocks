@@ -20,7 +20,7 @@ export class Sorting<TSortBy extends string | undefined = string> {
     makeAutoObservable(this)
   }
 
-  get params(): ISortingParams {
+  get params(): ISortingParams<TSortBy> {
     if (!this.key) {
       return {}
     }

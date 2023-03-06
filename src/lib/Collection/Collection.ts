@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable, reaction } from "mobx"
+import { makeAutoObservable, observable, reaction, runInAction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
@@ -88,7 +88,12 @@ export class Collection<
       ...this.filters,
       ...this.sorting.params,
       ...paginationParams,
-    }
+    } as TFilters &
+      (TPagination extends typeof Pagination
+        ? IPaginationParams
+        : TPagination extends typeof CursorPagination
+        ? ICursorPaginationParams
+        : IAnyObject)
   }
 
   // ====================================================
@@ -140,18 +145,6 @@ export class Collection<
 
     this.sorting.setParams(sortBy, sortAscending)
 
-    if (pageCursor) {
-      if (!this.cursorPagination) {
-        throw new Error("Using nextPageCursor is not supported when not using CursorPagination")
-      }
-
-      this.cursorPagination.init(pageCursor)
-
-      if (pageSize) {
-        this.cursorPagination.pageSize = pageSize
-      }
-    }
-
     if (this.pagination) {
       if (page) {
         this.pagination.page = page
@@ -160,6 +153,20 @@ export class Collection<
       if (pageSize) {
         this.pagination.pageSize = pageSize
       }
+    }
+
+    if (this.cursorPagination) {
+      if (pageCursor) {
+        this.cursorPagination.init(pageCursor)
+      }
+
+      if (pageSize) {
+        this.cursorPagination.pageSize = pageSize
+      }
+    }
+
+    if (pageCursor && !this.cursorPagination) {
+      console.warn('"pageCursor" param passed but CursorPagination not initialized')
     }
 
     const filters = query ? qs.parse(query) : opts.filters
@@ -171,20 +178,7 @@ export class Collection<
     this.fetching = true
 
     try {
-      const paginationParams = this.pagination
-        ? this.pagination.params
-        : this.cursorPagination
-        ? this.cursorPagination.params
-        : {}
-
-      const params = { ...this.sorting.params, ...this.filters, ...paginationParams } as TFilters &
-        (TPagination extends typeof Pagination
-          ? IPaginationParams
-          : TPagination extends typeof CursorPagination
-          ? ICursorPaginationParams
-          : IAnyObject)
-
-      const res = await fetchFn(params)
+      const res = await fetchFn(this.queryParams)
 
       this.data.replace(res.data)
 
@@ -192,7 +186,12 @@ export class Collection<
         this.totalCount = res.totalCount
       }
 
-      if ("nextPageCursor" in res && this.cursorPagination && res.nextPageCursor) {
+      if ("nextPageCursor" in res && res.nextPageCursor) {
+        if (!this.cursorPagination) {
+          console.warn('"nextPageCursor" param present in fetchFn response but CursorPagination not initialized') // prettier-ignore
+          return
+        }
+
         this.cursorPagination.setNext(res.nextPageCursor)
       }
 

@@ -64,7 +64,7 @@ export interface ICollectionConfig<
         : IAnyObject)
   ) => Promise<
     TPagination extends typeof CursorPagination
-      ? { data: TItem[]; nextPageCursor?: string }
+      ? { data: TItem[]; nextPageCursor: string | undefined }
       : { data: TItem[]; totalCount: number }
   >
 
