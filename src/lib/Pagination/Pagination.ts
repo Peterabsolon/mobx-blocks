@@ -61,6 +61,10 @@ export class Pagination {
     this.totalCount = count
   }
 
+  setPageSize = (size: number) => {
+    this.pageSize = size
+  }
+
   goToPrev = () => {
     if (this.page > 1) {
       this.page -= 1
@@ -77,5 +81,17 @@ export class Pagination {
         onChange(this.params)
       }
     }
+  }
+
+  resetToInitial = () => {
+    this.page = this.props?.page ?? 1
+    this.pageSize = this.props?.pageSize ?? 20
+    this.totalCount = this.props?.totalCount ?? 0
+  }
+
+  reset = () => {
+    this.page = 1
+    this.pageSize = 20
+    this.totalCount = 0
   }
 }

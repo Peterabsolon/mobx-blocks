@@ -9,41 +9,86 @@ describe("Pagination", () => {
   })
 
   it("can go to next page if no total set yet", () => {
-    const pagination = new Pagination()
-    pagination.goToNext()
-    expect(pagination.page).toBe(2)
+    const p = new Pagination()
+    p.goToNext()
+    expect(p.page).toBe(2)
   })
 
   it("calls onChange callback", () => {
     const onChange = jest.fn()
-    const pagination = new Pagination({ onChange })
-    pagination.goToNext()
+    const p = new Pagination({ onChange })
+    p.goToNext()
     expect(onChange).toBeCalledTimes(1)
   })
 
   it("can go to next page if current results count is less than total", () => {
-    const pagination = new Pagination()
+    const p = new Pagination()
 
-    pagination.setTotalCount(40)
-    expect(pagination.canGoToNext).toBe(true)
+    p.setTotalCount(40)
+    expect(p.canGoToNext).toBe(true)
 
-    pagination.goToNext()
-    expect(pagination.canGoToNext).toBe(false)
+    p.goToNext()
+    expect(p.canGoToNext).toBe(false)
 
-    pagination.goToNext()
-    expect(pagination.page).toBe(2)
+    p.goToNext()
+    expect(p.page).toBe(2)
   })
 
   it("can not go to prev page when on the first page", () => {
-    const pagination = new Pagination()
-    pagination.goToPrev()
-    expect(pagination.page).toBe(1)
+    const p = new Pagination()
+    p.goToPrev()
+    expect(p.page).toBe(1)
   })
 
   it("can go to prev page when on later page", () => {
-    const pagination = new Pagination()
-    pagination.goToNext()
-    pagination.goToPrev()
-    expect(pagination.page).toBe(1)
+    const p = new Pagination()
+    p.goToNext()
+    p.goToPrev()
+    expect(p.page).toBe(1)
+  })
+
+  it("can reset state to initial", () => {
+    const p = new Pagination({ page: 3, pageSize: 4, totalCount: 5 })
+
+    p.goToNext()
+    p.setPageSize(30)
+    p.setTotalCount(40)
+    p.resetToInitial()
+
+    expect(p.props).toEqual({
+      page: 3,
+      pageSize: 4,
+      totalCount: 5,
+    })
+  })
+
+  it("resets to defaults when no initial state passed", () => {
+    const p = new Pagination({})
+
+    p.goToNext()
+    p.setPageSize(30)
+    p.setTotalCount(40)
+    p.resetToInitial()
+
+    expect(p.params).toEqual({
+      page: 1,
+      pageSize: 20,
+      totalCount: undefined,
+    })
+  })
+
+  it("can reset state to default", () => {
+    const p = new Pagination({ page: 3, pageSize: 4, totalCount: 5 })
+
+    p.goToNext()
+    p.setPageSize(30)
+    p.setTotalCount(40)
+    p.reset()
+
+    expect(p.params).toEqual({
+      page: 1,
+      pageSize: 20,
+      totalCount: undefined,
+    })
   })
 })

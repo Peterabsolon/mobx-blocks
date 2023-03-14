@@ -27,7 +27,7 @@ export class Filters<TFilters extends IAnyObject> {
   // Computed
   // ====================================================
   get params(): Partial<TFilters> {
-    return Object.fromEntries(this.active)
+    return observable(Object.fromEntries(this.active))
   }
 
   // ====================================================
@@ -54,6 +54,7 @@ export class Filters<TFilters extends IAnyObject> {
   }
 
   reset = () => {
+    console.log("original reset")
     this.active.replace(this.initial)
   }
 }

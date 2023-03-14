@@ -55,16 +55,18 @@ export interface ICollectionConfig<
    * The method through which the Collection fetches the data from your API
    */
   fetchFn: (
-    queryParams: TFilters &
+    queryParams: TFilters & // Query filters
+      // Sorting params
       ISortingParams<TSortBy> &
+      // Pagination params, cursor or offset based depending on module passed to Collection
       (TPagination extends typeof Pagination
         ? IPaginationParams
         : TPagination extends typeof CursorPagination
         ? ICursorPaginationParams
-        : IAnyObject)
+        : Record<string, never>)
   ) => Promise<
     TPagination extends typeof CursorPagination
-      ? { data: TItem[]; nextPageCursor: string | undefined; prevPageCursor?: string }
+      ? { data: TItem[]; nextPageCursor?: string; prevPageCursor?: string }
       : { data: TItem[]; totalCount: number }
   >
 

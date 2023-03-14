@@ -1,12 +1,19 @@
-import { toJS } from "mobx"
+import { configure } from "mobx"
+
 import { CursorPagination } from "../CursorPagination"
 import { Pagination } from "../Pagination"
+
 import { Collection } from "./Collection"
+
+configure({ safeDescriptors: false })
+
+const TEST_DATA = [{ id: "1" }]
+const TOTAL_COUNT = TEST_DATA.length
 
 const fetchFn = jest.fn(() =>
   Promise.resolve({
-    data: [{ id: "1" }],
-    totalCount: 1,
+    data: TEST_DATA,
+    totalCount: TOTAL_COUNT,
   })
 )
 
@@ -14,6 +21,16 @@ const fetchFnCursor = jest.fn(() =>
   Promise.resolve({
     data: [{ id: "1" }],
     nextPageCursor: "foo",
+    prevPageCursor: "bar",
+  })
+)
+
+const fetchFnCursorAndTotal = jest.fn(() =>
+  Promise.resolve({
+    data: [{ id: "1" }],
+    nextPageCursor: "foo",
+    prevPageCursor: "bar",
+    totalCount: TOTAL_COUNT,
   })
 )
 
@@ -88,11 +105,12 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 20 })
     })
 
-    it("calls config.fetchFn with returned pageCursor returned from previous call if CursorPagination module used", async () => {
+    it("saves next/prevPageToken when present in the response", async () => {
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch()
       expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 20 })
       expect(c.cursorPagination?.next).toBe("foo")
+      expect(c.cursorPagination?.prev).toBe("bar")
     })
 
     it("calls config.fetchFn with passed in pageCursor if CursorPagination module used", async () => {
@@ -119,15 +137,16 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith({ page: 2, pageSize: 20 })
     })
 
-    it("saves pageSize when returned from fetchFn and Pagination is used", async () => {
+    it("saves totalCount when returned from fetchFn and Pagination is used", async () => {
       const c = new Collection({ fetchFn, pagination: Pagination })
       await c.fetch()
-      expect(c.pagination?.pageSize).toBe(20)
+      expect(c.pagination?.totalCount).toBe(TOTAL_COUNT)
     })
 
-    it("saves pageSize when returned from fetchFn and CursorPagination is used", async () => {
-      const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
-      expect(c.cursorPagination?.pageSize).toBe(20)
+    it("saves totalCount when returned from fetchFn and CursorPagination is used", async () => {
+      const c = new Collection({ fetchFn: fetchFnCursorAndTotal, pagination: CursorPagination })
+      await c.fetch()
+      expect(c.cursorPagination?.totalCount).toBe(TOTAL_COUNT)
     })
 
     it("warns when pageCursor passed to fetchFn but CursorPagination is NOT used", async () => {
@@ -321,69 +340,6 @@ describe("Collection", () => {
     })
   })
 
-  describe("setFetchParams", () => {
-    it("saves filters to state, clears other state", async () => {
-      const filters = { foo: "foo", bar: 2, baz: { qux: false } }
-
-      const c = new Collection({ fetchFn })
-      c.setFetchParams(filters)
-      expect(c.filters).toEqual(filters)
-
-      const filtersNew = { foo: "banana" }
-      c.setFetchParams(filtersNew)
-      expect(c.filters).toEqual(filtersNew)
-    })
-  })
-
-  describe("clearFetchParam", () => {
-    it("clears specific query param", () => {
-      const filters = { foo: "foo", bar: 3 }
-      const fetchFn = jest.fn()
-
-      const c = new Collection({ fetchFn })
-      c.setFetchParams(filters)
-      c.clearFetchParam("foo")
-
-      expect(toJS(c.filters)).toEqual({ bar: 3 })
-    })
-  })
-
-  describe("clearFetchParams", () => {
-    it("clears all filters", () => {
-      const filters = { foo: "foo", bar: 3 }
-      const fetchFn = jest.fn()
-
-      const c = new Collection({ fetchFn })
-      c.setFetchParams(filters)
-      c.clearFetchParams()
-
-      expect(c.filters).toEqual({})
-    })
-  })
-
-  describe("resetFetchParams", () => {
-    it("resets fetch filters to defaults passed through the constructor", () => {
-      const initialFilters = { foo: "foo", bar: 3, baz: { qux: true } }
-      const fetchFn = jest.fn()
-
-      const c = new Collection({ fetchFn, initialFilters })
-      c.mergeFetchParams({ baz: { qux: false } })
-      c.resetFetchParams()
-
-      expect(c.filters).toEqual(initialFilters)
-    })
-
-    it("clears fetch filters if not defaults passed", () => {
-      const fetchFn = jest.fn()
-
-      const c = new Collection({ fetchFn })
-      c.mergeFetchParams({ baz: { qux: false } })
-      c.resetFetchParams()
-
-      expect(c.filters).toEqual({})
-    })
-  })
-
   describe("syncParamsToUrl", () => {
     it("synchronizes filters to URL on change when props.syncParamsToUrl", async () => {
       const c = new Collection({ fetchFn, syncParamsToUrl: true })
@@ -391,16 +347,16 @@ describe("Collection", () => {
       await c.fetch({ filters: { foo: "bar" } })
       expect(window.location.search).toBe("?foo=bar")
 
-      c.mergeFetchParams({ bar: 2 })
+      c.filters.merge({ bar: 2 })
       expect(window.location.search).toBe("?bar=2&foo=bar")
 
-      c.setFetchParams({ foo: "banana", bar: 5 })
+      c.filters.merge({ foo: "banana", bar: 5 })
       expect(window.location.search).toBe("?bar=5&foo=banana")
 
-      c.clearFetchParam("foo")
+      c.filters.delete("foo")
       expect(window.location.search).toBe("?bar=5")
 
-      c.clearFetchParams()
+      c.filters.clear()
       expect(window.location.search).toBe("")
     })
   })
@@ -408,15 +364,18 @@ describe("Collection", () => {
   describe("resetState", () => {
     it("clears data and related state", async () => {
       const filters = { foo: "bar" }
+      const c = new Collection({ fetchFn, pagination: Pagination })
+      const filtersResetSpy = jest.spyOn(c.filters, "reset")
+      const paginationResetSpy = jest.spyOn(c.pagination, "reset")
 
-      const c = new Collection({ fetchFn })
       await c.fetch({ filters })
       c.resetState()
 
       expect(c.data.length).toBe(0)
       expect(c.initialized).toBe(false)
       expect(c.searchQuery).toBe("")
-      expect(c.filters).toEqual({})
+      expect(filtersResetSpy).toBeCalled()
+      expect(paginationResetSpy).toBeCalled()
     })
 
     it("clears errors", async () => {

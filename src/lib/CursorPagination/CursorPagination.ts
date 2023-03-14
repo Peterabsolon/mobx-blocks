@@ -2,7 +2,7 @@ import { makeAutoObservable, runInAction } from "mobx"
 
 export interface ICursorPaginationProps {
   pageSize?: number
-  onChange: (params: ICursorPaginationParams) => void
+  onChange?: (params: ICursorPaginationParams) => void
 }
 
 export interface ICursorPaginationParams {
@@ -16,6 +16,7 @@ export class CursorPagination {
   // ====================================================
   page = 1
   pageSize = 20
+  totalCount?: number
 
   prev: string | null = null
   current: string | null = null
@@ -24,10 +25,10 @@ export class CursorPagination {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props: ICursorPaginationProps) {
+  constructor(public props?: ICursorPaginationProps) {
     makeAutoObservable(this)
 
-    if (this.props.pageSize) {
+    if (this.props?.pageSize) {
       this.pageSize = this.props.pageSize
     }
   }
@@ -47,10 +48,6 @@ export class CursorPagination {
   }
 
   get canGoToNext(): boolean {
-    if (!this.current) {
-      return true
-    }
-
     return Boolean(this.next)
   }
 
@@ -74,24 +71,44 @@ export class CursorPagination {
     this.prev = prev
   }
 
+  setTotalCount = (totalCount: number) => {
+    this.totalCount = totalCount
+  }
+
+  setPageSize = (size: number) => {
+    this.pageSize = size
+  }
+
   goToNext = () => {
-    this.prev = this.current
-    this.current = this.next
+    if (!this.canGoToNext) {
+      return
+    }
+
+    this.setPrev(this.current)
+    this.setCurrent(this.next)
     this.page += 1
 
-    runInAction(() => this.props.onChange(this.params))
+    runInAction(() => {
+      if (this.props?.onChange) {
+        this.props.onChange(this.params)
+      }
+    })
   }
 
   goToPrev = () => {
-    if (!this.prev) {
+    if (!this.canGoToPrev) {
       return
     }
 
     const current = this.current
-    this.current = this.prev
-    this.next = current
+    this.setCurrent(this.prev)
+    this.setNext(current)
     this.page -= 1
 
-    runInAction(() => this.props.onChange(this.params))
+    runInAction(() => {
+      if (this.props?.onChange) {
+        this.props.onChange(this.params)
+      }
+    })
   }
 }
