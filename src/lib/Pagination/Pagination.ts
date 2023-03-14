@@ -1,8 +1,10 @@
 import { makeAutoObservable } from "mobx"
 
 export interface IPaginationProps {
+  page?: number
   pageSize?: number
   onChange?: (params: IPaginationParams) => void
+  totalCount?: number
 }
 
 export interface IPaginationParams {
@@ -24,9 +26,9 @@ export class Pagination {
   constructor(public props?: IPaginationProps) {
     makeAutoObservable(this)
 
-    if (props?.pageSize) {
-      this.pageSize = props.pageSize
-    }
+    if (props?.page) this.page = props.page
+    if (props?.pageSize) this.pageSize = props.pageSize
+    if (props?.totalCount) this.totalCount = props.totalCount
   }
 
   // ====================================================

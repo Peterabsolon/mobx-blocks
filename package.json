@@ -13,7 +13,9 @@
     "coverage": "npm run test -- --coverage",
     "prepare": "husky install",
     "format": "prettier --config .prettierrc --write 'src/**/*.{ts,tsx}'",
-    "trypublish": "npm run build && npm publish || true"
+    "trypublish": "npm run build && npm publish || true",
+    "ts:check": "tsc -p .",
+    "ts:watch": "npm run ts:check -- --watch"
   },
   "repository": {
     "type": "git",

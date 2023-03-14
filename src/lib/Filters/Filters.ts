@@ -1,7 +1,7 @@
 import { makeAutoObservable, observable } from "mobx"
 
 export interface IFiltersConfig<TFilters extends IAnyObject> {
-  initialFilters?: Partial<TFilters>
+  initial?: Partial<TFilters>
 }
 
 export class Filters<TFilters extends IAnyObject> {
@@ -14,8 +14,13 @@ export class Filters<TFilters extends IAnyObject> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public config?: IFiltersConfig<TFilters>) {
+  constructor(config?: IFiltersConfig<TFilters>) {
     makeAutoObservable(this)
+
+    if (config?.initial) {
+      this.active.replace(config.initial)
+      this.initial.replace(config.initial)
+    }
   }
 
   // ====================================================
@@ -32,6 +37,14 @@ export class Filters<TFilters extends IAnyObject> {
     this.active.set(key, value)
   }
 
+  merge = (filters: Partial<TFilters>) => {
+    this.active.merge(filters)
+  }
+
+  replace = (filters: Partial<TFilters>) => {
+    this.active.replace(filters)
+  }
+
   delete = (key: keyof TFilters) => {
     this.active.delete(key)
   }
@@ -45,6 +58,6 @@ export class Filters<TFilters extends IAnyObject> {
   }
 }
 
-const filters = new Filters({ initialFilters: { foo: "2", bar: 2 } })
+const filters = new Filters({ initial: { foo: "2", bar: 2 } })
 
 filters.set("foo", "bar")

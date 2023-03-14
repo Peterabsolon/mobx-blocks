@@ -21,17 +21,15 @@ export class Collection<
   data = observable<TItem>([])
   totalCount = 0
 
-  filtersMap = observable(new Map())
-  searchQuery = ""
-
   fetching = false
   fetchErr?: unknown
 
   searching = false
   searchErr?: unknown
+  searchQuery = ""
 
   sorting: Sorting<TSortBy>
-
+  filtersMap = observable(new Map())
   pagination?: Pagination
   cursorPagination?: CursorPagination
 

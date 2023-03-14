@@ -16,10 +16,16 @@ export class Sorting<TSortBy extends string | undefined = string> {
   key?: TSortBy
   ascending = false
 
+  // ====================================================
+  // Constructor
+  // ====================================================
   constructor(public props: ISortingProps) {
     makeAutoObservable(this)
   }
 
+  // ====================================================
+  // Computed
+  // ====================================================
   get params(): ISortingParams<TSortBy> {
     if (!this.key) {
       return {}
@@ -31,16 +37,29 @@ export class Sorting<TSortBy extends string | undefined = string> {
     }
   }
 
+  // ====================================================
+  // Actions
+  // ====================================================
+  /**
+   * Set both sort key and direction
+   */
   setParams = (key?: TSortBy, ascending?: boolean) => {
     this.key = key
     this.ascending = ascending || false
   }
 
+  /**
+   * Toggle sort directions
+   */
   toggleDirection = () => {
     this.ascending = !this.ascending
   }
 
-  setNewKey = async (key?: TSortBy) => {
+  /**
+   * Sort by a key, swap direction if the same key is as active
+   * @param key The key to sort with
+   */
+  sort = async (key?: TSortBy) => {
     if (key === this.key) {
       this.toggleDirection()
     } else {

@@ -41,7 +41,7 @@ export const Products = observer(() => {
                 className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.sorting.key === "id",
                 })}
-                onClick={() => products.sorting.setNewKey("id")}
+                onClick={() => products.sorting.sort("id")}
               >
                 {products.sorting.ascending ? "↑" : "↓"}
               </button>
@@ -59,7 +59,7 @@ export const Products = observer(() => {
                 className={cx("btn-ghost btn-sm btn ml-2", {
                   "btn-active": products.sorting.key === "name",
                 })}
-                onClick={() => products.sorting.setNewKey("name")}
+                onClick={() => products.sorting.sort("name")}
               >
                 {products.sorting.ascending ? "↑" : "↓"}
               </button>

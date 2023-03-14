@@ -2,11 +2,11 @@
 
 # mobx-blocks
 
-react-query wannabe for people who like MobX or keeping their logic and view layers separate
+MobX classes designed for solving common problems encountered building dashboard-style web applications.
 
 ## Collection
 
-Manages a list of data, filtering, pagination
+Manages a list of data, filtering, pagination, sorting, selection
 
 [Usage](https://github.com/Peterabsolon/mobx-blocks/blob/main/src/demo/src/Products/Products.store.tsx#L9)
 
@@ -25,3 +25,15 @@ Manages a list of data, filtering, pagination
 ## Filters
 
 [TODO] Manages filters
+
+## Selection
+
+[TODO] Manages filters
+
+## Notifications
+
+[TODO] Manages notifications
+
+## Modals
+
+[TODO] Manages modals
