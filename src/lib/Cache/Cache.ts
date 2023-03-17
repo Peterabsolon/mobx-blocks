@@ -1,7 +1,4 @@
-import { IObservableArray, makeAutoObservable, observable, values } from "mobx"
-import { keyBy } from "lodash"
-
-import { toEntries } from "../util"
+import { makeAutoObservable, observable, values } from "mobx"
 
 import { CacheItem } from "./Cache.item"
 import { CacheQuery } from "./Cache.query"
@@ -19,16 +16,6 @@ export interface ICacheConfig<TItem extends IAnyObject> {
    * Optionally provide initial data
    */
   initialData?: TItem[]
-
-  /**
-   * If passed, enables caching list queries
-   */
-  fetchList?: (queryString: string) => Promise<TItem[]>
-
-  /**
-   * If passed, enables caching getOne queries
-   */
-  fetchOne?: (id: string | number) => Promise<TItem | undefined>
 }
 
 export class Cache<TItem extends IObjectWithId> {
@@ -37,7 +24,6 @@ export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   items = observable<string, CacheItem<TItem>>(new Map())
   queries = observable<string, CacheQuery<TItem>>(new Map())
-
   ttl: number
 
   // ====================================================
@@ -52,7 +38,7 @@ export class Cache<TItem extends IObjectWithId> {
 
     if (initialData) {
       const items = initialData.reduce((acc, item) => {
-        acc.push([item.id.toString(), new CacheItem(item)])
+        acc.push([item.id.toString(), new CacheItem(item, this.ttl)])
         return acc
       }, [] as [string, CacheItem<TItem>][])
 
@@ -70,60 +56,41 @@ export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   // Actions
   // ====================================================
-  readOne = (id: string | number): TItem | undefined => {
-    return this.items.get(id.toString())?.data
+  saveOne = (item: TItem) => {
+    const cacheItem = new CacheItem(item, this.ttl)
+    this.items.set(cacheItem.id, cacheItem)
+    return cacheItem
   }
 
-  getOne = async (id: string | number, useCache = true): Promise<TItem | undefined> => {
-    if (!this.config?.fetchOne) {
-      console.warn("")
-      return undefined
-    }
-
-    const cachedItem = this.items.get(id.toString())
-    if (cachedItem && !cachedItem.isStale && useCache) {
-      return cachedItem.data
-    }
-
-    const data = await this.config.fetchOne(id)
-    if (!data) {
-      return undefined
-    }
-
-    const item = new CacheItem(data)
-    this.items.set(id.toString(), item)
-    return item.data
+  readOne = (id: string | number): CacheItem<TItem> | undefined => {
+    return this.items.get(id.toString())
   }
 
-  getList = async (queryString = ""): Promise<TItem[]> => {
-    if (!this.config?.fetchList) {
-      console.warn("")
-      return []
+  saveQuery = (
+    queryString: string,
+    data: TItem[],
+    responseData: {
+      prevPageCursor?: string
+      nextPageCursor?: string
+      totalCount?: number
     }
+  ) => {
+    const items = data.map(this.saveOne)
 
-    const cachedQuery = this.queries.get(queryString)
-    if (cachedQuery && !cachedQuery.isStale) {
-      return Promise.resolve(cachedQuery.data)
-    }
+    const query = new CacheQuery(
+      items,
+      this.ttl,
+      responseData.prevPageCursor,
+      responseData.nextPageCursor,
+      responseData.totalCount
+    )
 
-    const data = await this.config.fetchList(queryString)
-    const items = data.map(this.set)
-    const query = new CacheQuery(items)
     this.queries.set(queryString, query)
 
-    return query.data
+    return query
   }
 
-  set = (item: TItem): CacheItem<TItem> => {
-    const cachedItem = this.items.get(item.id.toString())
-    if (cachedItem && !cachedItem.isStale) {
-      cachedItem.update(item)
-      return cachedItem
-    }
-
-    const newItem = new CacheItem(item)
-    this.items.set(item.id.toString(), newItem)
-
-    return newItem
+  readQuery = (queryString: string): CacheQuery<TItem> | undefined => {
+    return this.queries.get(queryString)
   }
 }

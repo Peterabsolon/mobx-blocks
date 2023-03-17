@@ -1,5 +1,7 @@
 import { makeAutoObservable } from "mobx"
 
+import { timeDeltaInMinutes } from "../util"
+
 export class CacheItem<TItem extends IObjectWithId> {
   // ====================================================
   // Model
@@ -10,7 +12,7 @@ export class CacheItem<TItem extends IObjectWithId> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public data: TItem) {
+  constructor(public data: TItem, public ttl: number) {
     makeAutoObservable(this)
 
     this.id = this.data.id.toString()
@@ -20,8 +22,8 @@ export class CacheItem<TItem extends IObjectWithId> {
   // ====================================================
   // Computed
   // ====================================================
-  get isStale() {
-    return false
+  isStale = (now: Date): boolean => {
+    return timeDeltaInMinutes(now, this.cachedAt) > this.ttl
   }
 
   // ====================================================

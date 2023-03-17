@@ -1,4 +1,5 @@
 import { configure } from "mobx"
+import { Cache } from "../Cache"
 
 import { CursorPagination } from "../CursorPagination"
 import { Pagination } from "../Pagination"
@@ -41,7 +42,6 @@ describe("Collection", () => {
 
   describe("bootstrap", () => {
     it("sets up other other modules, hooks up onChange events", () => {
-      const fetchFn = jest.fn()
       const c = new Collection({ fetchFn })
 
       c.pagination.goToNext()
@@ -168,15 +168,6 @@ describe("Collection", () => {
       expect(c.cursorPagination?.totalCount).toBe(TOTAL_COUNT)
     })
 
-    it("warns when pageCursor passed to fetchFn but CursorPagination is NOT used", async () => {
-      const spy = jest.spyOn(console, "warn")
-
-      const c = new Collection({ fetchFn: fetchFnCursor })
-      await c.fetch({ pageCursor: "foo" })
-
-      expect(spy).toBeCalledWith('"pageCursor" param passed but CursorPagination not initialized') // prettier-ignore
-    })
-
     it("synchronizes filters to URL if config.syncParamsToUrl", async () => {
       const replaceStateSpy = jest.spyOn(window.history, "replaceState")
       const filters = { foo: "bar", bar: 2 }
@@ -219,6 +210,50 @@ describe("Collection", () => {
       await c.fetch()
 
       expect(errorHandlerFn).toBeCalledWith(error)
+    })
+
+    describe("caching", () => {
+      it("returns cached result when cache used", async () => {
+        const fetchFn = jest.fn().mockResolvedValue({
+          data: TEST_DATA,
+          totalCount: TOTAL_COUNT,
+        })
+
+        const cache = new Cache()
+        const c = new Collection({ cache, fetchFn })
+        await c.fetch()
+
+        const res2 = await c.fetch()
+        const res3 = await c.fetch()
+
+        // API called only once
+        expect(fetchFn).toBeCalledTimes(1)
+
+        // points to the same item
+        expect(res2.data[0]).toBe(res3.data[0])
+      })
+
+      it("refetches after TTL exired", async () => {
+        jest.useFakeTimers()
+
+        const fetchFn = jest.fn().mockResolvedValue({
+          data: TEST_DATA,
+          totalCount: TOTAL_COUNT,
+        })
+
+        const cache = new Cache({ ttl: 1 }) // 1 minute
+        const c = new Collection({ cache, fetchFn })
+
+        await c.fetch()
+        expect(fetchFn).toBeCalledTimes(1)
+
+        jest.advanceTimersByTime(1000 * 61) // 1 minute 1 second later
+
+        await c.fetch()
+        expect(fetchFn).toBeCalledTimes(2) // fetch should be called twice now
+
+        jest.useRealTimers()
+      })
     })
 
     // TODO: Use for fetchMore()
@@ -332,6 +367,52 @@ describe("Collection", () => {
       await c.search("someQuery")
 
       expect(errorHandlerFn).toBeCalledWith(error)
+    })
+  })
+
+  describe("fetchOne", () => {
+    it("calls config.fetchFn, returns result", async () => {
+      const fetchOneFn = jest.fn().mockResolvedValue({ id: "Qux" })
+      const c = new Collection({ fetchFn, fetchOneFn })
+      const res = await c.fetchOne("Qux")
+      expect(fetchOneFn).toBeCalledWith("Qux")
+      expect(res).toEqual({ id: "Qux" })
+    })
+
+    it("returns cached result when cache used", async () => {
+      const fetchOneFn = jest.fn().mockResolvedValue({ id: "Qux" })
+
+      const cache = new Cache()
+      const c = new Collection({ fetchFn, fetchOneFn, cache })
+
+      const res1 = await c.fetchOne("Qux")
+      expect(fetchOneFn).toBeCalledWith("Qux")
+      expect(res1).toEqual({ id: "Qux" })
+
+      const res2 = await c.fetchOne("Qux", { useCache: true })
+      expect(fetchOneFn).toBeCalledTimes(1)
+      expect(res2).toEqual({ id: "Qux" })
+    })
+
+    it("refetches after TTL expired", async () => {
+      jest.useFakeTimers()
+
+      const fetchOneFn = jest.fn().mockResolvedValue({ id: "Qux" })
+
+      const cache = new Cache({ ttl: 1 })
+      const c = new Collection({ fetchFn, fetchOneFn, cache })
+
+      const res1 = await c.fetchOne("Qux")
+      expect(fetchOneFn).toBeCalledWith("Qux")
+      expect(res1).toEqual({ id: "Qux" })
+
+      jest.advanceTimersByTime(1000 * 61)
+
+      const res2 = await c.fetchOne("Qux", { useCache: true })
+      expect(fetchOneFn).toBeCalledTimes(2)
+      expect(res2).toEqual({ id: "Qux" })
+
+      jest.useRealTimers()
     })
   })
 

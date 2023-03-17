@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable, reaction, runInAction } from "mobx"
+import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
@@ -9,7 +9,7 @@ import { Sorting } from "../Sorting"
 import { Filters } from "../Filters"
 
 export class Collection<
-  TItem,
+  TItem extends IObjectWithId,
   TFilters extends Record<string, any>,
   TSortBy extends string,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
@@ -23,7 +23,7 @@ export class Collection<
   data = observable<TItem>([])
 
   /**
-   * Has fetched some data
+   * Has fetched some data?
    */
   initialized = false
 
@@ -117,9 +117,11 @@ export class Collection<
       }
     }
 
-    return {
-      ...this.queryParamsWithoutPagination,
-    }
+    return this.queryParamsWithoutPagination
+  }
+
+  get queryString(): string {
+    return qs.stringify(this.queryParams)
   }
 
   // ====================================================
@@ -156,31 +158,33 @@ export class Collection<
   }
 
   private handleFetch = async (opts?: { shouldThrowError?: boolean }) => {
-    const { fetchFn, errorHandlerFn } = this.config
+    const { fetchFn, errorHandlerFn, cache } = this.config
 
     this.fetching = true
 
     try {
+      if (cache) {
+        const cached = cache.readQuery(this.queryString)
+        if (cached && !cached.isStale(new Date())) {
+          this.data.replace(cached.data)
+          this.savePaginationState(cached)
+
+          return {
+            data: cached.data,
+            totalCount: cached.totalCount,
+          }
+        }
+      }
+
       // TODO: remove any
       const res = await fetchFn(this.queryParams as any)
-
       this.data.replace(res.data)
 
-      if ("totalCount" in res) {
-        this.pagination?.setTotalCount(res.totalCount)
+      if (cache) {
+        cache.saveQuery(this.queryString, res.data, res)
       }
 
-      if (this.cursorPagination && "totalCount" in res) {
-        this.cursorPagination.setTotalCount(res.totalCount)
-      }
-
-      if (this.cursorPagination && "nextPageCursor" in res && res.nextPageCursor) {
-        this.cursorPagination.setNext(res.nextPageCursor)
-      }
-
-      if (this.cursorPagination && "prevPageCursor" in res && res.prevPageCursor) {
-        this.cursorPagination.setPrev(res.prevPageCursor)
-      }
+      this.savePaginationState(res)
 
       return res
     } catch (err) {
@@ -201,6 +205,30 @@ export class Collection<
     }
   }
 
+  private savePaginationState = (state: {
+    pageCursor?: string | null
+    prevPageCursor?: string | null
+    nextPageCursor?: string | null
+    totalCount?: number
+  }) => {
+    if (state.totalCount) {
+      this.pagination.setTotalCount(state.totalCount)
+      this.cursorPagination.setTotalCount(state.totalCount)
+    }
+
+    if (state.pageCursor) {
+      this.cursorPagination.setCurrent(state.pageCursor)
+    }
+
+    if (state.prevPageCursor) {
+      this.cursorPagination.setPrev(state.prevPageCursor)
+    }
+
+    if (state.nextPageCursor) {
+      this.cursorPagination.setNext(state.nextPageCursor)
+    }
+  }
+
   // ====================================================
   // Public methods
   // ====================================================
@@ -214,24 +242,10 @@ export class Collection<
   ) => {
     const { clearFilters, query, sortBy, sortAscending, page, pageSize, pageCursor } = opts
 
-    if (pageCursor && typeof this.config.pagination !== typeof CursorPagination) {
-      console.warn('"pageCursor" param passed but CursorPagination not initialized')
-    }
-
-    /**
-     * Sorting
-     */
     this.sorting.setParams(sortBy, sortAscending)
-
-    /**
-     * Pagination
-     */
     this.pagination.init(page, pageSize)
     this.cursorPagination.init(pageCursor, pageSize)
 
-    /**
-     * Filters
-     */
     const filters = query ? qs.parse(query) : opts.filters
     if (filters) {
       if (clearFilters) this.filters.clear()
@@ -239,6 +253,37 @@ export class Collection<
     }
 
     return this.handleFetch(opts)
+  }
+
+  /**
+   * TODO
+   */
+  fetchOne = async (
+    id: string | number,
+    opts?: { useCache?: boolean }
+  ): Promise<TItem | undefined> => {
+    const { cache } = this.config
+
+    if (cache && opts?.useCache) {
+      const item = cache.readOne(id)
+      if (item && !item.isStale(new Date())) {
+        return item.data
+      }
+    }
+
+    if (!this.config.fetchOneFn) {
+      // TODO: Warn
+      return
+    }
+
+    const data = await this.config.fetchOneFn(id)
+
+    if (cache && data) {
+      const cachedItem = cache.saveOne(data)
+      return cachedItem.data
+    }
+
+    return data
   }
 
   /**

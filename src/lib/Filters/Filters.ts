@@ -70,7 +70,6 @@ export class Filters<TFilters extends IAnyObject> {
   }
 
   reset = () => {
-    console.log("original reset")
     this.active.replace(this.initial)
   }
 }

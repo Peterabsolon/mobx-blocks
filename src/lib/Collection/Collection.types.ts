@@ -1,3 +1,4 @@
+import { Cache } from "../Cache"
 import { ICursorPaginationParams, CursorPagination } from "../CursorPagination"
 import { IPaginationParams, Pagination } from "../Pagination"
 import type { ISortingParams } from "../Sorting"
@@ -39,7 +40,7 @@ export interface ICollectionGenericsDefaults {
 }
 
 export interface ICollectionConfig<
-  TItem,
+  TItem extends IObjectWithId,
   TFilters extends Record<string, any>,
   TSortBy extends string | undefined,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
@@ -64,6 +65,11 @@ export interface ICollectionConfig<
   >
 
   /**
+   * TODO: Docs
+   */
+  fetchOneFn?: (id: string | number) => Promise<TItem | undefined>
+
+  /**
    * Optional method through which the Collection searches the data on your API
    */
   searchFn?: (query: string, filters?: TFilters) => Promise<TItem[]>
@@ -77,6 +83,11 @@ export interface ICollectionConfig<
    * Initial data for the Collection
    */
   initialData?: TItem[]
+
+  /**
+   * TODO: Docs
+   */
+  cache?: Cache<TItem>
 
   /**
    * Pagination module imported from this same library "mobx-blocks"
@@ -107,6 +118,11 @@ export interface ICollectionConfig<
    * @example sortBy: 'id' | 'name'
    */
   sortBy?: TSortBy
+
+  /**
+   * Cache TTL for this collection, in minutes
+   */
+  cacheTtl?: number
 }
 
 export interface IFetchFnOptions<

@@ -79,6 +79,17 @@ export class FakeCursorApi {
     }
   }
 
+  getProductById = async (id: string | number) => {
+    try {
+      const item = this.products.find((p) => p.id === id.toString())
+      await sleep(250)
+      return item
+    } catch (err) {
+      console.log("[getProductById]", err)
+      return undefined
+    }
+  }
+
   getUsers = async (params: IApiParamsCursor) => {
     try {
       await sleep(250)
@@ -86,6 +97,17 @@ export class FakeCursorApi {
     } catch (err) {
       console.log("err", err)
       return { data: [], nextPageCursor: undefined, prevPageCursor: undefined }
+    }
+  }
+
+  getUserById = async (id: string | number) => {
+    try {
+      const item = this.users.find((p) => p.id === id.toString())
+      await sleep(250)
+      return item
+    } catch (err) {
+      console.log("[getUserById]", err)
+      return undefined
     }
   }
 }

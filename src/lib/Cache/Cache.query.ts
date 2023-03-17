@@ -1,5 +1,7 @@
 import { makeAutoObservable } from "mobx"
 
+import { timeDeltaInMinutes } from "../util"
+
 import { CacheItem } from "./Cache.item"
 
 export class CacheQuery<TItem extends IObjectWithId> {
@@ -11,7 +13,13 @@ export class CacheQuery<TItem extends IObjectWithId> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public items: CacheItem<TItem>[]) {
+  constructor(
+    public items: CacheItem<TItem>[],
+    public ttl: number,
+    public prevPageCursor: string | null = null,
+    public nextPageCursor: string | null = null,
+    public totalCount?: number
+  ) {
     makeAutoObservable(this)
 
     this.cachedAt = new Date()
@@ -24,8 +32,7 @@ export class CacheQuery<TItem extends IObjectWithId> {
     return this.items.map((item) => item.data)
   }
 
-  get isStale() {
-    // TODO:
-    return false
+  isStale = (now: Date): boolean => {
+    return timeDeltaInMinutes(now, this.cachedAt) > this.ttl
   }
 }
