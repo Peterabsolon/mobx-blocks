@@ -6,7 +6,7 @@ import type { IUser } from "../Users/Users.types"
 import type { IApiParamsCursor } from "./FakeApi.types"
 import { isFuzzyMatch, mockProduct, mockUser, sleep } from "./FakeApi.utils"
 
-const TOTAL_COUNT = 10
+const TOTAL_COUNT = 1000
 
 const buildResponse = <T extends IObjectWithId>(
   { sortBy, sortAscending, pageCursor, pageSize = 20, ...filters }: IApiParamsCursor,

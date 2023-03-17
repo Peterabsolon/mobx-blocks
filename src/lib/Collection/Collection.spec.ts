@@ -39,6 +39,26 @@ describe("Collection", () => {
     jest.useRealTimers()
   })
 
+  describe("bootstrap", () => {
+    it("sets up other other modules, hooks up onChange events", () => {
+      const fetchFn = jest.fn()
+      const c = new Collection({ fetchFn })
+
+      c.pagination.goToNext()
+      expect(fetchFn).toBeCalledTimes(1)
+
+      c.cursorPagination.setNext("cursor")
+      c.cursorPagination.goToNext()
+      expect(fetchFn).toBeCalledTimes(2)
+
+      c.sorting.sort("name")
+      expect(fetchFn).toBeCalledTimes(3)
+
+      c.filters.set("name", "dude")
+      expect(fetchFn).toBeCalledTimes(4)
+    })
+  })
+
   describe("fetch", () => {
     it("performs fetch API request, saves data to state", async () => {
       const c = new Collection({ fetchFn })
@@ -101,7 +121,6 @@ describe("Collection", () => {
     it("calls config.fetchFn with page/pageSize params if Pagination module used", async () => {
       const c = new Collection({ fetchFn, pagination: Pagination })
       await c.fetch()
-
       expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 20 })
     })
 

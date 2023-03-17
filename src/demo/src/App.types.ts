@@ -3,4 +3,4 @@
  */
 export const ORDER_DIRECTION: [string, string] = ["ASCENDING", "DESCENDING"]
 
-export type TOrderDirection = typeof ORDER_DIRECTION[number]
+export type TOrderDirection = (typeof ORDER_DIRECTION)[number]

@@ -1,17 +1,18 @@
 // TODO: Add "excludes" "includes" etc
 
-import { makeAutoObservable, observable } from "mobx"
+import { makeAutoObservable, observable, reaction } from "mobx"
 
 export interface IFiltersConfig<TFilters extends IAnyObject> {
   initial?: Partial<TFilters>
+  onChange?: (params: Partial<TFilters>) => void
 }
 
 export class Filters<TFilters extends IAnyObject> {
   // ====================================================
   // Model
   // ====================================================
-  active = observable(new Map())
-  initial = observable(new Map())
+  private active = observable(new Map())
+  private initial = observable(new Map())
 
   // ====================================================
   // Constructor
@@ -23,6 +24,15 @@ export class Filters<TFilters extends IAnyObject> {
       this.active.replace(config.initial)
       this.initial.replace(config.initial)
     }
+
+    reaction(
+      () => this.params,
+      (params) => {
+        if (config?.onChange) {
+          config.onChange(params)
+        }
+      }
+    )
   }
 
   // ====================================================
@@ -32,14 +42,13 @@ export class Filters<TFilters extends IAnyObject> {
     return observable(Object.fromEntries(this.active))
   }
 
-  // TOOD: Use URLSearchParams everywhere
-  get paramsString(): string {
-    return new URLSearchParams(Object.fromEntries(this.active)).toString()
-  }
-
   // ====================================================
   // Actions
   // ====================================================
+  get = <K extends keyof TFilters>(key: K) => {
+    return this.active.get(key)
+  }
+
   set = <K extends keyof TFilters>(key: K, value: TFilters[K]) => {
     this.active.set(key, value)
   }

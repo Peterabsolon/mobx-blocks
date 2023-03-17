@@ -69,19 +69,22 @@ export class Collection<
     this.handleSearch = debounce(this.handleSearch, 500)
 
     this.sorting = new Sorting<TSortBy>({
-      onChange: () => this.fetch(),
+      onChange: () => this.handleFetch(),
     })
 
-    this.filters = new Filters<TFilters>({ initial: config.initialFilters })
+    this.filters = new Filters<TFilters>({
+      onChange: () => this.handleFetch(),
+      initial: config.initialFilters,
+    })
 
     this.pagination = new Pagination({
+      onChange: () => this.handleFetch(),
       pageSize: this.config.pageSize,
-      onChange: () => this.fetch(),
     })
 
     this.cursorPagination = new CursorPagination({
+      onChange: () => this.handleFetch(),
       pageSize: this.config.pageSize,
-      onChange: (params) => this.fetch(params as IFetchFnOptions<TFilters, TSortBy>),
     })
 
     if (config.syncParamsToUrl) {
@@ -126,7 +129,7 @@ export class Collection<
     history.replaceState("", "", `${location.pathname}?${qs.stringify(this.queryParams)}`)
   }
 
-  private handleSearch = async (opts: { shouldThrowError?: boolean }) => {
+  private handleSearch = async (opts?: { shouldThrowError?: boolean }) => {
     const { searchFn, errorHandlerFn } = this.config
     if (!searchFn) {
       return
@@ -144,7 +147,7 @@ export class Collection<
         errorHandlerFn(err)
       }
 
-      if (opts.shouldThrowError) {
+      if (opts?.shouldThrowError) {
         throw err
       }
     } finally {
@@ -152,18 +155,63 @@ export class Collection<
     }
   }
 
+  private handleFetch = async (opts?: { shouldThrowError?: boolean }) => {
+    const { fetchFn, errorHandlerFn } = this.config
+
+    this.fetching = true
+
+    try {
+      // TODO: remove any
+      const res = await fetchFn(this.queryParams as any)
+
+      this.data.replace(res.data)
+
+      if ("totalCount" in res) {
+        this.pagination?.setTotalCount(res.totalCount)
+      }
+
+      if (this.cursorPagination && "totalCount" in res) {
+        this.cursorPagination.setTotalCount(res.totalCount)
+      }
+
+      if (this.cursorPagination && "nextPageCursor" in res && res.nextPageCursor) {
+        this.cursorPagination.setNext(res.nextPageCursor)
+      }
+
+      if (this.cursorPagination && "prevPageCursor" in res && res.prevPageCursor) {
+        this.cursorPagination.setPrev(res.prevPageCursor)
+      }
+
+      return res
+    } catch (err) {
+      this.fetchErr = err
+
+      if (errorHandlerFn) {
+        errorHandlerFn(err)
+      }
+
+      if (opts?.shouldThrowError) {
+        throw err
+      }
+
+      return { data: [], totalCount: 0 }
+    } finally {
+      this.fetching = false
+      this.initialized = true
+    }
+  }
+
   // ====================================================
   // Public methods
   // ====================================================
   /**
-   * Perform fetch API request
+   * Fetches data from your API and save data to collection
    */
   fetch = async (
     opts: TPagination extends CursorPagination
       ? IFetchFnCursorOptions<TFilters, TSortBy>
       : IFetchFnOptions<TFilters, TSortBy> = {}
   ) => {
-    const { fetchFn, errorHandlerFn } = this.config
     const { clearFilters, query, sortBy, sortAscending, page, pageSize, pageCursor } = opts
 
     if (pageCursor && typeof this.config.pagination !== typeof CursorPagination) {
@@ -190,49 +238,7 @@ export class Collection<
       this.filters.merge(filters as TFilters)
     }
 
-    this.fetching = true
-
-    return runInAction(async () => {
-      try {
-        // TODO: remove any
-        const res = await fetchFn(this.queryParams as any)
-
-        this.data.replace(res.data)
-
-        if ("totalCount" in res) {
-          this.pagination?.setTotalCount(res.totalCount)
-        }
-
-        if (this.cursorPagination && "totalCount" in res) {
-          this.cursorPagination.setTotalCount(res.totalCount)
-        }
-
-        if (this.cursorPagination && "nextPageCursor" in res && res.nextPageCursor) {
-          this.cursorPagination.setNext(res.nextPageCursor)
-        }
-
-        if (this.cursorPagination && "prevPageCursor" in res && res.prevPageCursor) {
-          this.cursorPagination.setPrev(res.prevPageCursor)
-        }
-
-        return res
-      } catch (err) {
-        this.fetchErr = err
-
-        if (errorHandlerFn) {
-          errorHandlerFn(err)
-        }
-
-        if (opts.shouldThrowError) {
-          throw err
-        }
-
-        return { data: [], totalCount: 0 }
-      } finally {
-        this.fetching = false
-        this.initialized = true
-      }
-    })
+    return this.handleFetch(opts)
   }
 
   /**
@@ -256,16 +262,16 @@ export class Collection<
   }
 
   /**
-   * Reset all state to initial
+   * Resets all state to initial
    */
   resetState = () => {
+    this.data.clear()
+
     // TODO: Reset all blocks
     // this.sorting.reset()
-    // this.cursorPagination.reset()
     this.filters.reset()
+    this.cursorPagination.reset()
     this.pagination.reset()
-
-    this.data.clear()
 
     this.initialized = false
     this.fetching = false
@@ -276,6 +282,3 @@ export class Collection<
     this.searchErr = undefined
   }
 }
-
-// export const createCollection = <T extends ICollectionGenerics>(props: ICollectionConfig<T>) =>
-//   new Collection<T>(props)

@@ -79,6 +79,12 @@ export class CursorPagination {
     this.pageSize = size
   }
 
+  onChange = () => {
+    if (this.config?.onChange) {
+      this.config.onChange(this.params)
+    }
+  }
+
   goToNext = () => {
     if (!this.canGoToNext) {
       return
@@ -87,12 +93,7 @@ export class CursorPagination {
     this.setPrev(this.current)
     this.setCurrent(this.next)
     this.page += 1
-
-    runInAction(() => {
-      if (this.config?.onChange) {
-        this.config.onChange(this.params)
-      }
-    })
+    this.onChange()
   }
 
   goToPrev = () => {
@@ -104,11 +105,12 @@ export class CursorPagination {
     this.setCurrent(this.prev)
     this.setNext(current)
     this.page -= 1
+    this.onChange()
+  }
 
-    runInAction(() => {
-      if (this.config?.onChange) {
-        this.config.onChange(this.params)
-      }
-    })
+  reset = () => {
+    this.page = 1
+    this.pageSize = this.config?.pageSize || 20
+    this.totalCount = undefined
   }
 }

@@ -6,7 +6,7 @@ import type { IUser } from "../Users/Users.types"
 import type { IApiParams } from "./FakeApi.types"
 import { isFuzzyMatch, mockProduct, mockUser, sleep } from "./FakeApi.utils"
 
-const TOTAL_COUNT = 10
+const TOTAL_COUNT = 1000
 
 const buildResponse = <T extends IAnyObject>(
   { sortBy, sortAscending, page, pageSize, ...filters }: IApiParams,

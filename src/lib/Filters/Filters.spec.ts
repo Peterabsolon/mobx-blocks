@@ -9,23 +9,17 @@ interface IFilters {
 }
 
 describe("Filters", () => {
-  it("sets initial filters from config", () => {
-    const initial = { foo: "bar", baz: 2 }
-    const f = new Filters({ initial })
-    expect(Object.fromEntries(f.initial)).toEqual(initial)
-  })
-
   it("can set a filter", () => {
     const f = new Filters<IFilters>({})
     f.set("foo", "bar")
-    expect(f.active.get("foo")).toBe("bar")
+    expect(f.get("foo")).toBe("bar")
   })
 
   it("can delete a filter", () => {
     const f = new Filters<IFilters>({})
     f.set("foo", "bar")
     f.delete("foo")
-    expect(f.active.get("foo")).toBe(undefined)
+    expect(f.get("foo")).toBe(undefined)
   })
 
   it("can merge new filters", () => {

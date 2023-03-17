@@ -5,7 +5,7 @@ export interface IProduct {
 
 const PRODUCTS_SORT_BY = ["id", "name"] as const
 
-export type TProductsSortBy = typeof PRODUCTS_SORT_BY[number]
+export type TProductsSortBy = (typeof PRODUCTS_SORT_BY)[number]
 
 export interface IProductsFilters {
   id?: number

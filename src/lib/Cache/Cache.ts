@@ -21,19 +21,22 @@ export interface ICacheConfig<TItem extends IAnyObject> {
   initialData?: TItem[]
 
   /**
-   * If passed, enables caching list queries.
-   * The queries are keyed in the cache by a toString() representation of URLSearchParams.
-   * TODO: Use URLSearchParams
+   * If passed, enables caching list queries
    */
-  fetchList?: (params: IAnyObject) => Promise<TItem[]>
+  fetchList?: (queryString: string) => Promise<TItem[]>
+
+  /**
+   * If passed, enables caching getOne queries
+   */
+  fetchOne?: (id: string | number) => Promise<TItem | undefined>
 }
 
 export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   // State
   // ====================================================
-  private items = observable<string, CacheItem<TItem>>(new Map())
-  private queries = observable<string, CacheQuery<TItem>>(new Map())
+  items = observable<string, CacheItem<TItem>>(new Map())
+  queries = observable<string, CacheQuery<TItem>>(new Map())
 
   ttl: number
 
@@ -67,38 +70,60 @@ export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   // Actions
   // ====================================================
-  readOne = (id: string | number): CacheItem<TItem> | undefined => {
-    return this.items.get(id.toString())
+  readOne = (id: string | number): TItem | undefined => {
+    return this.items.get(id.toString())?.data
   }
 
-  getOne = (id: string | number): Promise<CacheItem<TItem> | undefined> => {
-    return Promise.resolve(undefined)
+  getOne = async (id: string | number, useCache = true): Promise<TItem | undefined> => {
+    if (!this.config?.fetchOne) {
+      console.warn("")
+      return undefined
+    }
+
+    const cachedItem = this.items.get(id.toString())
+    if (cachedItem && !cachedItem.isStale && useCache) {
+      return cachedItem.data
+    }
+
+    const data = await this.config.fetchOne(id)
+    if (!data) {
+      return undefined
+    }
+
+    const item = new CacheItem(data)
+    this.items.set(id.toString(), item)
+    return item.data
   }
 
-  getList = (query: string): Promise<TItem[]> => {
+  getList = async (queryString = ""): Promise<TItem[]> => {
     if (!this.config?.fetchList) {
       console.warn("")
-      return Promise.resolve([])
+      return []
     }
 
-    const cachedQuery = this.queries.get(query)
+    const cachedQuery = this.queries.get(queryString)
     if (cachedQuery && !cachedQuery.isStale) {
-      return Promise.resolve(cachedQuery.items)
+      return Promise.resolve(cachedQuery.data)
     }
 
-    return Promise.resolve([])
+    const data = await this.config.fetchList(queryString)
+    const items = data.map(this.set)
+    const query = new CacheQuery(items)
+    this.queries.set(queryString, query)
+
+    return query.data
   }
 
-  set = (item: TItem): TItem => {
+  set = (item: TItem): CacheItem<TItem> => {
     const cachedItem = this.items.get(item.id.toString())
     if (cachedItem && !cachedItem.isStale) {
       cachedItem.update(item)
-      return cachedItem.data
+      return cachedItem
     }
 
     const newItem = new CacheItem(item)
     this.items.set(item.id.toString(), newItem)
 
-    return newItem.data
+    return newItem
   }
 }

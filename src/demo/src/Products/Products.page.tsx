@@ -1,10 +1,10 @@
 import { observer } from "mobx-react-lite"
 import { useEffect } from "react"
 import cx from "classnames"
-// import { Pagination } from "../components"
+
+import { Pagination } from "../components"
 
 import { store } from "./Products.store"
-import { Pagination } from "../components"
 
 export const Products = observer(() => {
   const { products } = store
@@ -33,7 +33,7 @@ export const Products = observer(() => {
               <input
                 className="input-bordered input input-sm"
                 placeholder="ID"
-                value={products.filters.id || ""}
+                value={products.filters.get("id") || ""}
                 onChange={(evt) => products.fetch({ filters: { id: evt.target.value } })}
               />
 
@@ -51,7 +51,7 @@ export const Products = observer(() => {
               <input
                 className="input-bordered input input-sm"
                 placeholder="Name"
-                value={products.filters.name}
+                value={products.filters.get("name")}
                 onChange={(evt) => products.fetch({ filters: { name: evt.target.value } })}
               />
 
@@ -79,7 +79,9 @@ export const Products = observer(() => {
 
         {products.fetching ? (
           "Loading..."
-        ) : (
+        ) : products.searching ? (
+          "Searching ..."
+        ) : products.data.length > 0 ? (
           <tbody>
             {products.data.map((product) => (
               <tr key={product.id}>
@@ -88,6 +90,8 @@ export const Products = observer(() => {
               </tr>
             ))}
           </tbody>
+        ) : (
+          "No results"
         )}
       </table>
 
