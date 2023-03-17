@@ -158,7 +158,7 @@ describe("Collection", () => {
       expect(spy).toBeCalledWith('"pageCursor" param passed but CursorPagination not initialized') // prettier-ignore
     })
 
-    it("synchronizes filters to URL if props.syncParamsToUrl", async () => {
+    it("synchronizes filters to URL if config.syncParamsToUrl", async () => {
       const replaceStateSpy = jest.spyOn(window.history, "replaceState")
       const filters = { foo: "bar", bar: 2 }
 
@@ -191,7 +191,7 @@ describe("Collection", () => {
       }
     })
 
-    it("calls props.errorHandlerFn() if passed on error", async () => {
+    it("calls config.errorHandlerFn() if passed on error", async () => {
       const error = new Error("Foo")
       const fetchFn = jest.fn(() => Promise.reject(error))
       const errorHandlerFn = jest.fn()
@@ -303,7 +303,7 @@ describe("Collection", () => {
       }
     })
 
-    it("calls props.errorHandlerFn() if passed on error", async () => {
+    it("calls config.errorHandlerFn() if passed on error", async () => {
       const error = new Error("Foo")
       const searchFn = jest.fn(() => Promise.reject(error))
       const fetchFn = jest.fn(() => Promise.reject(error))
@@ -341,7 +341,7 @@ describe("Collection", () => {
   })
 
   describe("syncParamsToUrl", () => {
-    it("synchronizes filters to URL on change when props.syncParamsToUrl", async () => {
+    it("synchronizes filters to URL on change when config.syncParamsToUrl", async () => {
       const c = new Collection({ fetchFn, syncParamsToUrl: true })
 
       await c.fetch({ filters: { foo: "bar" } })

@@ -1,3 +1,5 @@
+// TODO: Add "excludes" "includes" etc
+
 import { makeAutoObservable, observable } from "mobx"
 
 export interface IFiltersConfig<TFilters extends IAnyObject> {
@@ -28,6 +30,11 @@ export class Filters<TFilters extends IAnyObject> {
   // ====================================================
   get params(): Partial<TFilters> {
     return observable(Object.fromEntries(this.active))
+  }
+
+  // TOOD: Use URLSearchParams everywhere
+  get paramsString(): string {
+    return new URLSearchParams(Object.fromEntries(this.active)).toString()
   }
 
   // ====================================================

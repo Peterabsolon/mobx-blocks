@@ -1,6 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx"
 
-export interface ICursorPaginationProps {
+export interface ICursorPaginationConfig {
   pageSize?: number
   onChange?: (params: ICursorPaginationParams) => void
 }
@@ -25,11 +25,11 @@ export class CursorPagination {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props?: ICursorPaginationProps) {
+  constructor(public config?: ICursorPaginationConfig) {
     makeAutoObservable(this)
 
-    if (this.props?.pageSize) {
-      this.pageSize = this.props.pageSize
+    if (this.config?.pageSize) {
+      this.pageSize = this.config.pageSize
     }
   }
 
@@ -89,8 +89,8 @@ export class CursorPagination {
     this.page += 1
 
     runInAction(() => {
-      if (this.props?.onChange) {
-        this.props.onChange(this.params)
+      if (this.config?.onChange) {
+        this.config.onChange(this.params)
       }
     })
   }
@@ -106,8 +106,8 @@ export class CursorPagination {
     this.page -= 1
 
     runInAction(() => {
-      if (this.props?.onChange) {
-        this.props.onChange(this.params)
+      if (this.config?.onChange) {
+        this.config.onChange(this.params)
       }
     })
   }

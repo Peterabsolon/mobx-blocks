@@ -45,13 +45,6 @@ export interface ICollectionConfig<
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
 > {
   /**
-   * Pagination module imported from "mobx-blocks"
-   * @example pagination: new Pagination()
-   * @example pagination: new CursorPagination()
-   */
-  pagination?: TPagination
-
-  /**
    * The method through which the Collection fetches the data from your API
    */
   fetchFn: (
@@ -79,6 +72,18 @@ export interface ICollectionConfig<
    * Optional method to handle API request thrown errors, e.g. to render a toast notification
    */
   errorHandlerFn?: (err: unknown) => any
+
+  /**
+   * Initial data for the Collection
+   */
+  initialData?: TItem[]
+
+  /**
+   * Pagination module imported from this same library "mobx-blocks"
+   * @example pagination: new Pagination()
+   * @example pagination: new CursorPagination()
+   */
+  pagination?: TPagination
 
   /**
    * The default query params

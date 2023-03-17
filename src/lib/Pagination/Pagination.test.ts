@@ -55,11 +55,9 @@ describe("Pagination", () => {
     p.setTotalCount(40)
     p.resetToInitial()
 
-    expect(p.props).toEqual({
-      page: 3,
-      pageSize: 4,
-      totalCount: 5,
-    })
+    expect(p.page).toBe(3)
+    expect(p.pageSize).toBe(4)
+    expect(p.totalCount).toBe(5)
   })
 
   it("resets to defaults when no initial state passed", () => {

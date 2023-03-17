@@ -85,7 +85,7 @@ export class Collection<
     })
 
     if (config.syncParamsToUrl) {
-      reaction(() => this.filters.params, this.syncFetchParamsToUrl)
+      reaction(() => this.filters.params, this.syncQueryParamsToUrl)
     }
   }
 
@@ -122,7 +122,7 @@ export class Collection<
   // ====================================================
   // Private methods
   // ====================================================
-  private syncFetchParamsToUrl = () => {
+  private syncQueryParamsToUrl = () => {
     history.replaceState("", "", `${location.pathname}?${qs.stringify(this.queryParams)}`)
   }
 

@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx"
 
-export interface ISortingProps {
+export interface ISortingConfig {
   onChange?: () => void
 }
 
@@ -19,7 +19,7 @@ export class Sorting<TSortBy extends string | undefined = string> {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props?: ISortingProps) {
+  constructor(public config?: ISortingConfig) {
     makeAutoObservable(this)
   }
 
@@ -68,8 +68,8 @@ export class Sorting<TSortBy extends string | undefined = string> {
 
     this.key = key
 
-    if (this.props?.onChange) {
-      this.props?.onChange()
+    if (this.config?.onChange) {
+      this.config?.onChange()
     }
   }
 }

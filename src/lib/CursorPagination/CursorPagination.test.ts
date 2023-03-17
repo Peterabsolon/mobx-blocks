@@ -1,7 +1,7 @@
 import { CursorPagination } from "./CursorPagination"
 
 describe("CursorPagination", () => {
-  it("sets initial state from props", () => {
+  it("sets initial state from config", () => {
     const p = new CursorPagination({ pageSize: 1337 })
     expect(p.pageSize).toBe(1337)
   })

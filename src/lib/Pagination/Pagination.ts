@@ -1,6 +1,6 @@
 import { makeAutoObservable } from "mobx"
 
-export interface IPaginationProps {
+export interface IPaginationConfig {
   page?: number
   pageSize?: number
   onChange?: (params: IPaginationParams) => void
@@ -23,12 +23,12 @@ export class Pagination {
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public props?: IPaginationProps) {
+  constructor(public config?: IPaginationConfig) {
     makeAutoObservable(this)
 
-    if (props?.page) this.page = props.page
-    if (props?.pageSize) this.pageSize = props.pageSize
-    if (props?.totalCount) this.totalCount = props.totalCount
+    if (config?.page) this.page = config.page
+    if (config?.pageSize) this.pageSize = config.pageSize
+    if (config?.totalCount) this.totalCount = config.totalCount
   }
 
   // ====================================================
@@ -72,7 +72,7 @@ export class Pagination {
   }
 
   goToNext = () => {
-    const { onChange } = this.props || {}
+    const { onChange } = this.config || {}
 
     if (this.canGoToNext) {
       this.page += 1
@@ -84,9 +84,9 @@ export class Pagination {
   }
 
   resetToInitial = () => {
-    this.page = this.props?.page ?? 1
-    this.pageSize = this.props?.pageSize ?? 20
-    this.totalCount = this.props?.totalCount ?? 0
+    this.page = this.config?.page ?? 1
+    this.pageSize = this.config?.pageSize ?? 20
+    this.totalCount = this.config?.totalCount ?? 0
   }
 
   reset = () => {
