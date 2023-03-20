@@ -2,11 +2,12 @@ import { makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
 
-import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
 import { Pagination } from "../Pagination"
 import { CursorPagination } from "../CursorPagination"
 import { Sorting } from "../Sorting"
 import { Filters } from "../Filters"
+
+import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
 
 export class Collection<
   TItem extends IObjectWithId,
