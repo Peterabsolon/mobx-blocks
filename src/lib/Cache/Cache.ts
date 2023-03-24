@@ -66,6 +66,17 @@ export class Cache<TItem extends IObjectWithId> {
     return this.items.get(id.toString())
   }
 
+  updateOne = (id: string | number, item: TItem) => {
+    const cachedItem = this.readOne(id)
+    if (cachedItem) {
+      cachedItem.update(item)
+      return cachedItem.data
+    }
+
+    const newCachedItem = this.saveOne(item)
+    return newCachedItem.data
+  }
+
   saveQuery = (
     queryString: string,
     data: TItem[],

@@ -8,7 +8,15 @@ import { Collection } from "./Collection"
 
 configure({ safeDescriptors: false })
 
-const TEST_DATA = [{ id: "1" }, { id: "2" }]
+interface ITestItem {
+  id: string | number
+  name?: string
+}
+
+const TEST_DATA: ITestItem[] = [
+  { id: "1", name: "Foo" },
+  { id: "2", name: "Bar" },
+]
 const TOTAL_COUNT = TEST_DATA.length
 
 const fetchFn = jest.fn(() =>
@@ -34,6 +42,10 @@ const fetchFnCursorAndTotal = jest.fn(() =>
     prevPageCursor: "bar",
     totalCount: TOTAL_COUNT,
   })
+)
+
+const editFn = jest.fn((id: ITestItem["id"], data: Omit<Partial<ITestItem>, "id">) =>
+  Promise.resolve({ id, ...data })
 )
 
 describe("Collection", () => {
@@ -424,6 +436,34 @@ describe("Collection", () => {
       const c = new Collection({ fetchFn })
       const res = await c.fetchOne("1")
       expect(res).toBe(undefined)
+    })
+  })
+
+  describe("edit", () => {
+    it("updates data", async () => {
+      const id = "1"
+      const updates = { name: "Banana" }
+
+      const c = new Collection({ fetchFn, editFn })
+      await c.fetch()
+      await c.edit(id, updates)
+
+      expect(editFn).toBeCalledWith(id, updates)
+      expect(c.data.find((item) => item.id === id)?.name).toBe("Banana")
+    })
+
+    it("updates cache if passed", async () => {
+      const id = "1"
+      const updates = { name: "Banana" }
+      const cache = new Cache<ITestItem>({ ttl: 1 })
+
+      const c = new Collection({ fetchFn, editFn, cache })
+      await c.fetch()
+      await c.edit(id, updates)
+
+      expect(editFn).toBeCalledWith(id, updates)
+      expect(c.data.find((item) => item.id === id)?.name).toBe("Banana")
+      expect(cache.readOne(id)?.data?.name).toBe("Banana")
     })
   })
 

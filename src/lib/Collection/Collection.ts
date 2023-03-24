@@ -308,14 +308,7 @@ export class Collection<
     const data = await this.config.fetchOneFn(id)
 
     if (cache && data) {
-      const cachedItem = cache.readOne(id)
-      if (cachedItem) {
-        cachedItem.update(data)
-        return cachedItem.data
-      }
-
-      const newCachedItem = cache.saveOne(data)
-      return newCachedItem.data
+      cache.updateOne(id, data)
     }
 
     return data
@@ -327,6 +320,31 @@ export class Collection<
   search = async (query: string, opts: IFetchFnOptions<TFilters, TSortBy> = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
+  }
+
+  /**
+   * Performs edit request, updates data & cache
+   */
+  edit = async (id: string | number, updates: Omit<Partial<TItem>, "id">) => {
+    const { editFn, cache } = this.config
+
+    if (!editFn) {
+      return undefined
+    }
+
+    const updatedItem = await editFn(id, updates)
+    if (!updatedItem) {
+      return undefined
+    }
+
+    if (cache) {
+      cache.updateOne(id, updatedItem)
+    }
+
+    const index = this.data.findIndex((item) => item.id === id)
+    if (index > -1) {
+      this.data[index] = updatedItem
+    }
   }
 
   /**

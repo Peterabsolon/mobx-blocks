@@ -75,6 +75,11 @@ export interface ICollectionConfig<
   searchFn?: (query: string, filters?: TFilters) => Promise<TItem[]>
 
   /**
+   * TODO: Docs
+   */
+  editFn?: (id: string | number, updates: Omit<Partial<TItem>, "id">) => Promise<TItem>
+
+  /**
    * Optional method to handle API request thrown errors, e.g. to render a toast notification
    */
   errorHandlerFn?: (err: unknown) => any
