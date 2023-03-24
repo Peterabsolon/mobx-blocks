@@ -1,4 +1,3 @@
-import { xor } from "lodash"
 import { makeAutoObservable, observable } from "mobx"
 
 export class Selection<TItem extends IObjectWithId> {
@@ -35,5 +34,9 @@ export class Selection<TItem extends IObjectWithId> {
 
   set = (items: TItem[]) => {
     this.selected.replace(items)
+  }
+
+  reset = () => {
+    this.selected.clear()
   }
 }

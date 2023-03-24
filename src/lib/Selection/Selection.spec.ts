@@ -36,4 +36,13 @@ describe("Selection", () => {
       expect(s.selected).toEqual(items)
     })
   })
+
+  describe("reset", () => {
+    it("clears selected state", () => {
+      const s = new Selection<ITestItem>()
+      s.select(TEST_ITEM)
+      s.reset()
+      expect(s.selected.length).toBe(0)
+    })
+  })
 })

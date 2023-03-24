@@ -8,6 +8,7 @@ import { Sorting } from "../Sorting"
 import { Filters } from "../Filters"
 
 import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
+import { Selection } from "../Selection"
 
 export class Collection<
   TItem extends IObjectWithId,
@@ -56,10 +57,11 @@ export class Collection<
   // ====================================================
   // Blocks
   // ====================================================
-  sorting: Sorting<TSortBy>
+  cursorPagination: CursorPagination
   filters: Filters<TFilters>
   pagination: Pagination
-  cursorPagination: CursorPagination
+  selection: Selection<TItem>
+  sorting: Sorting<TSortBy>
 
   // ====================================================
   // Constructor
@@ -68,6 +70,8 @@ export class Collection<
     makeAutoObservable(this, { config: false })
 
     this.handleSearch = debounce(this.handleSearch, 500)
+
+    this.selection = new Selection<TItem>()
 
     this.sorting = new Sorting<TSortBy>({
       onChange: () => this.handleFetch(),
@@ -343,11 +347,11 @@ export class Collection<
   resetState = () => {
     this.data.clear()
 
-    // TODO: Reset all blocks
-    // this.sorting.reset()
-    this.filters.reset()
     this.cursorPagination.reset()
+    this.filters.reset()
     this.pagination.reset()
+    this.selection.reset()
+    this.sorting.reset()
 
     this.initialized = false
     this.fetching = false

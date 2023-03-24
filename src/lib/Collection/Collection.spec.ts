@@ -270,16 +270,6 @@ describe("Collection", () => {
         jest.useRealTimers()
       })
     })
-
-    // TODO: Use for fetchMore()
-    it.skip("appends new data to exisitng", async () => {
-      const c = new Collection({ fetchFn })
-      await c.fetch()
-      expect(c.data.length).toBe(1)
-
-      await c.fetch()
-      expect(c.data.length).toBe(2)
-    })
   })
 
   describe("search", () => {
@@ -486,8 +476,12 @@ describe("Collection", () => {
     it("clears data and related state", async () => {
       const filters = { foo: "bar" }
       const c = new Collection({ fetchFn, pagination: Pagination })
+
       const filtersResetSpy = jest.spyOn(c.filters, "reset")
       const paginationResetSpy = jest.spyOn(c.pagination, "reset")
+      const cursorPaginationResetSpy = jest.spyOn(c.cursorPagination, "reset")
+      const sortingResetSpy = jest.spyOn(c.sorting, "reset")
+      const selectionResetSpy = jest.spyOn(c.selection, "reset")
 
       await c.fetch({ filters })
       c.resetState()
@@ -497,6 +491,9 @@ describe("Collection", () => {
       expect(c.searchQuery).toBe("")
       expect(filtersResetSpy).toBeCalled()
       expect(paginationResetSpy).toBeCalled()
+      expect(cursorPaginationResetSpy).toBeCalled()
+      expect(sortingResetSpy).toBeCalled()
+      expect(selectionResetSpy).toBeCalled()
     })
 
     it("clears errors", async () => {
