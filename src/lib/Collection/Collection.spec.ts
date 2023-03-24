@@ -21,6 +21,7 @@ const fetchFn = jest.fn(() =>
 const fetchFnCursor = jest.fn(() =>
   Promise.resolve({
     data: [{ id: "1" }],
+    pageCursor: "baz",
     nextPageCursor: "foo",
     prevPageCursor: "bar",
   })
@@ -71,7 +72,7 @@ describe("Collection", () => {
       expect(c.fetching).toBe(false)
     })
 
-    it("calls config.fetchFn with filters passed as object", async () => {
+    it("can fetch with filters passed as object", async () => {
       const filters = { foo: "bar" }
 
       const c = new Collection({ fetchFn })
@@ -80,7 +81,7 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("calls config.fetchFn with filters passed as string", async () => {
+    it("can fetch with filters passed as string", async () => {
       const query = "?foo=bar"
 
       const c = new Collection({ fetchFn })
@@ -89,7 +90,7 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
 
-    it("calls config.fetchFn with default filters", async () => {
+    it("can fetch with default filters", async () => {
       const filters = { foo: "bar" }
 
       const c = new Collection({ fetchFn, initialFilters: filters })
@@ -98,7 +99,7 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("calls config.fetchFn with both default filters and filters passed as argument", async () => {
+    it("can fetch with both default filters and filters passed as argument", async () => {
       const initialFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
@@ -108,7 +109,7 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith({ ...initialFilters, ...filters })
     })
 
-    it("calls config.fetchFn with filters passed as argument only when opts.clearFilters is true", async () => {
+    it("can fetch with filters passed as argument only when opts.clearFilters is true", async () => {
       const initialFilters = { foo: "foo", bar: 1 }
       const filters = { bar: 2 }
 
@@ -118,27 +119,34 @@ describe("Collection", () => {
       expect(fetchFn).toBeCalledWith(filters)
     })
 
-    it("calls config.fetchFn with page/pageSize params if Pagination module used", async () => {
+    it("can fetch with page/pageSize params if Pagination module used", async () => {
       const c = new Collection({ fetchFn, pagination: Pagination })
       await c.fetch()
       expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 20 })
     })
 
-    it("saves next/prevPageToken when present in the response", async () => {
+    it("can fetch with initial sortBy/sortAscending props", async () => {
+      const c = new Collection({ fetchFn })
+      await c.fetch({ sortBy: "foo", sortAscending: true })
+      expect(fetchFn).toBeCalledWith({ sortBy: "foo", sortAscending: true })
+    })
+
+    it("saves cursors when present in the response", async () => {
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch()
       expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 20 })
       expect(c.cursorPagination?.next).toBe("foo")
+      expect(c.cursorPagination?.current).toBe("baz")
       expect(c.cursorPagination?.prev).toBe("bar")
     })
 
-    it("calls config.fetchFn with passed in pageCursor if CursorPagination module used", async () => {
+    it("can fetch with passed in pageCursor if CursorPagination module used", async () => {
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch({ pageCursor: "foo" })
       expect(fetchFnCursor).toBeCalledWith({ pageCursor: "foo", pageSize: 20 })
     })
 
-    it("calls config.fetchFn with passed in pageSize if CursorPagination module used", async () => {
+    it("can fetch with passed in pageSize if CursorPagination module used", async () => {
       const fetchFnCursor = jest.fn(() =>
         Promise.resolve({
           data: [{ id: "1" }],
@@ -151,13 +159,13 @@ describe("Collection", () => {
       expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 10 })
     })
 
-    it("calls config.fetchFn with passed in pageSize if Pagination module used", async () => {
+    it("can fetch with passed in pageSize if Pagination module used", async () => {
       const c = new Collection({ fetchFn, pagination: Pagination })
       await c.fetch({ pageSize: 10 })
       expect(fetchFn).toBeCalledWith({ page: 1, pageSize: 10 })
     })
 
-    it("calls config.fetchFn with passed in page if Pagination module used", async () => {
+    it("can fetch with passed in page if Pagination module used", async () => {
       const c = new Collection({ fetchFn, pagination: Pagination })
       await c.fetch({ page: 2 })
       expect(fetchFn).toBeCalledWith({ page: 2, pageSize: 20 })
@@ -378,7 +386,7 @@ describe("Collection", () => {
   })
 
   describe("fetchOne", () => {
-    it("calls config.fetchFn, returns result", async () => {
+    it("can fetch, returns result", async () => {
       const fetchOneFn = jest.fn().mockResolvedValue({ id: "Qux" })
       const c = new Collection({ fetchFn, fetchOneFn })
       const res = await c.fetchOne("Qux")
@@ -420,6 +428,12 @@ describe("Collection", () => {
       expect(res2).toEqual({ id: "Qux" })
 
       jest.useRealTimers()
+    })
+
+    it("returns undefined if config.fetchOne not passed", async () => {
+      const c = new Collection({ fetchFn })
+      const res = await c.fetchOne("1")
+      expect(res).toBe(undefined)
     })
   })
 

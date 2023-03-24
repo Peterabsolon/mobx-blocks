@@ -54,8 +54,8 @@ export class CursorPagination {
   // ====================================================
   // Actions
   // ====================================================
-  setCurrent = (current?: string | null) => {
-    this.current = current || null
+  setCurrent = (current: string | null) => {
+    this.current = current
   }
 
   setNext = (next: string | null) => {

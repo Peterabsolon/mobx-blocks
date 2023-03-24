@@ -298,8 +298,7 @@ export class Collection<
     }
 
     if (!this.config.fetchOneFn) {
-      // TODO: Warn
-      return
+      return undefined
     }
 
     const data = await this.config.fetchOneFn(id)
