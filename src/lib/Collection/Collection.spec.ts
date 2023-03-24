@@ -139,6 +139,13 @@ describe("Collection", () => {
     })
 
     it("calls config.fetchFn with passed in pageSize if CursorPagination module used", async () => {
+      const fetchFnCursor = jest.fn(() =>
+        Promise.resolve({
+          data: [{ id: "1" }],
+          nextPageCursor: "foo",
+          prevPageCursor: "bar",
+        })
+      )
       const c = new Collection({ fetchFn: fetchFnCursor, pagination: CursorPagination })
       await c.fetch({ pageSize: 10 })
       expect(fetchFnCursor).toBeCalledWith({ pageCursor: null, pageSize: 10 })

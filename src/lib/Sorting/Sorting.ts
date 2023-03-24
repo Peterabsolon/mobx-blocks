@@ -1,7 +1,9 @@
 import { makeAutoObservable } from "mobx"
 
-export interface ISortingConfig {
+export interface ISortingConfig<TSortBy extends string | undefined = string> {
   onChange?: () => void
+  key?: TSortBy
+  ascending?: boolean
 }
 
 export interface ISortingParams<TSortBy extends string | undefined = string> {
@@ -14,13 +16,16 @@ export class Sorting<TSortBy extends string | undefined = string> {
   // Model
   // ====================================================
   key?: TSortBy
-  ascending = false
+  ascending: boolean
 
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public config?: ISortingConfig) {
+  constructor(public config?: ISortingConfig<TSortBy>) {
     makeAutoObservable(this)
+
+    this.key = config?.key || undefined
+    this.ascending = config?.ascending || false
   }
 
   // ====================================================
@@ -40,12 +45,12 @@ export class Sorting<TSortBy extends string | undefined = string> {
   // ====================================================
   // Actions
   // ====================================================
-  /**
-   * Set both sort key and direction
-   */
-  setParams = (key?: TSortBy, ascending?: boolean) => {
+  setKey = (key?: TSortBy) => {
     this.key = key
-    this.ascending = ascending || false
+  }
+
+  setAscending = (ascending: boolean) => {
+    this.ascending = ascending
   }
 
   /**
@@ -63,13 +68,18 @@ export class Sorting<TSortBy extends string | undefined = string> {
     if (key === this.key) {
       this.toggleDirection()
     } else {
-      this.ascending = false
+      this.setAscending(this.config?.ascending || false)
     }
 
-    this.key = key
+    this.setKey(key)
 
     if (this.config?.onChange) {
       this.config?.onChange()
     }
+  }
+
+  reset = () => {
+    this.key = undefined
+    this.ascending = this.config?.ascending || false
   }
 }

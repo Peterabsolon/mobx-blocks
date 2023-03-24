@@ -8,30 +8,40 @@ describe("Pagination", () => {
     expect(p.totalCount).toBe(100)
   })
 
-  it("can go to next page if no total set yet", () => {
-    const p = new Pagination()
-    p.goToNext()
-    expect(p.page).toBe(2)
-  })
+  describe("goToNext", () => {
+    it("can go to next page if no total set yet", () => {
+      const p = new Pagination()
+      p.goToNext()
+      expect(p.page).toBe(2)
+    })
 
-  it("calls onChange callback", () => {
-    const onChange = jest.fn()
-    const p = new Pagination({ onChange })
-    p.goToNext()
-    expect(onChange).toBeCalledTimes(1)
-  })
+    it("can go to next page if current results count is less than total", () => {
+      const p = new Pagination()
 
-  it("can go to next page if current results count is less than total", () => {
-    const p = new Pagination()
+      p.setTotalCount(40)
+      expect(p.canGoToNext).toBe(true)
 
-    p.setTotalCount(40)
-    expect(p.canGoToNext).toBe(true)
+      p.goToNext()
+      expect(p.canGoToNext).toBe(false)
 
-    p.goToNext()
-    expect(p.canGoToNext).toBe(false)
+      p.goToNext()
+      expect(p.page).toBe(2)
+    })
 
-    p.goToNext()
-    expect(p.page).toBe(2)
+    it("can not go to next page if is on last", () => {
+      const p = new Pagination()
+      p.setTotalCount(20)
+      p.setPage(2)
+      p.goToNext()
+      expect(p.page).toBe(2)
+    })
+
+    it("calls onChange callback", () => {
+      const onChange = jest.fn()
+      const p = new Pagination({ onChange })
+      p.goToNext()
+      expect(onChange).toBeCalledTimes(1)
+    })
   })
 
   it("can not go to prev page when on the first page", () => {

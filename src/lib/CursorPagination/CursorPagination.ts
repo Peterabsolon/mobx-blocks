@@ -54,11 +54,6 @@ export class CursorPagination {
   // ====================================================
   // Actions
   // ====================================================
-  init = (current?: string | null, pageSize?: number) => {
-    this.setCurrent(current)
-    if (pageSize) this.pageSize = pageSize
-  }
-
   setCurrent = (current?: string | null) => {
     this.current = current || null
   }

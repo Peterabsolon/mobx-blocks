@@ -71,6 +71,8 @@ export class Collection<
 
     this.sorting = new Sorting<TSortBy>({
       onChange: () => this.handleFetch(),
+      ascending: config.sortAscending,
+      key: config.sortBy,
     })
 
     this.filters = new Filters<TFilters>({
@@ -80,12 +82,12 @@ export class Collection<
 
     this.pagination = new Pagination({
       onChange: () => this.handleFetch(),
-      pageSize: this.config.pageSize,
+      pageSize: config.pageSize,
     })
 
     this.cursorPagination = new CursorPagination({
       onChange: () => this.handleFetch(),
-      pageSize: this.config.pageSize,
+      pageSize: config.pageSize,
     })
 
     if (config.syncParamsToUrl) {
@@ -243,14 +245,37 @@ export class Collection<
   ) => {
     const { clearFilters, query, sortBy, sortAscending, page, pageSize, pageCursor } = opts
 
-    this.sorting.setParams(sortBy, sortAscending)
-    this.pagination.init(page, pageSize)
-    this.cursorPagination.init(pageCursor, pageSize)
+    if (clearFilters) {
+      this.filters.clear()
+      this.pagination.reset()
+      this.cursorPagination.reset()
+      this.sorting.reset()
+    }
+
+    if (sortBy) {
+      this.sorting.setKey(sortBy)
+    }
+
+    if (typeof sortAscending !== "undefined") {
+      this.sorting.setAscending(sortAscending)
+    }
 
     const filters = query ? qs.parse(query) : opts.filters
     if (filters) {
-      if (clearFilters) this.filters.clear()
       this.filters.merge(filters as TFilters)
+    }
+
+    if (page) {
+      this.pagination.setPage(page)
+    }
+
+    if (pageSize) {
+      this.pagination.setPageSize(pageSize)
+      this.cursorPagination.setPageSize(pageSize)
+    }
+
+    if (pageCursor) {
+      this.cursorPagination.setCurrent(pageCursor)
     }
 
     return this.handleFetch(opts)
@@ -280,8 +305,14 @@ export class Collection<
     const data = await this.config.fetchOneFn(id)
 
     if (cache && data) {
-      const cachedItem = cache.saveOne(data)
-      return cachedItem.data
+      const cachedItem = cache.readOne(id)
+      if (cachedItem) {
+        cachedItem.update(data)
+        return cachedItem.data
+      }
+
+      const newCachedItem = cache.saveOne(data)
+      return newCachedItem.data
     }
 
     return data

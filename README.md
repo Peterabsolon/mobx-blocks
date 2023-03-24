@@ -20,9 +20,9 @@ const products = new Collection({ fetchFn })
 console.log(c.data) // type Product[] inferred from fetchFn return
 ```
 
-### TODO: Fetching with aborts
+<!-- ### TODO: Fetching with aborts -->
 
-### TODO: Searching with debounce
+<!-- ### TODO: Searching with debounce -->
 
 ### Sorting
 
@@ -34,7 +34,8 @@ const products = new Collection({
 
 products.sorting.sort("id") // fetchFn call (triggered automatically by reaction)
 products.sorting.toggleDirection() // fetchFn call
-products.sorting.setParams("title", true) // fetchFn call
+products.sorting.setKey("title") // fetchFn call
+products.sorting.setAscending(true) // fetchFn call
 ```
 
 ### Filtering

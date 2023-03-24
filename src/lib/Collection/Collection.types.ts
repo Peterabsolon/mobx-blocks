@@ -120,6 +120,11 @@ export interface ICollectionConfig<
   sortBy?: TSortBy
 
   /**
+   * The initial sort direction to use
+   */
+  sortAscending?: boolean
+
+  /**
    * Cache TTL for this collection, in minutes
    */
   cacheTtl?: number
