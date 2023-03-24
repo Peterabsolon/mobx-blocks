@@ -446,10 +446,11 @@ describe("Collection", () => {
 
       const c = new Collection({ fetchFn, editFn })
       await c.fetch()
-      await c.edit(id, updates)
+      const res = await c.edit(id, updates)
 
       expect(editFn).toBeCalledWith(id, updates)
       expect(c.data.find((item) => item.id === id)?.name).toBe("Banana")
+      expect(res).toEqual({ id, ...updates })
     })
 
     it("updates cache if passed", async () => {
@@ -459,11 +460,30 @@ describe("Collection", () => {
 
       const c = new Collection({ fetchFn, editFn, cache })
       await c.fetch()
-      await c.edit(id, updates)
+      const res = await c.edit(id, updates)
 
       expect(editFn).toBeCalledWith(id, updates)
       expect(c.data.find((item) => item.id === id)?.name).toBe("Banana")
       expect(cache.readOne(id)?.data?.name).toBe("Banana")
+      expect(res).toEqual({ id, ...updates })
+    })
+
+    it("returns undefined if item with ID not found on the API side", async () => {
+      const id = "1"
+      const updates = { name: "Banana" }
+      const editFn = jest.fn(() => Promise.resolve(undefined))
+
+      const c = new Collection({ fetchFn, editFn })
+      await c.fetch()
+      const res = await c.edit(id, updates)
+      expect(res).toBe(undefined)
+    })
+
+    it("returns undefined if editFn not passed", async () => {
+      const c = new Collection({ fetchFn })
+      await c.fetch()
+      const res = await c.edit("1", {})
+      expect(res).toBe(undefined)
     })
   })
 

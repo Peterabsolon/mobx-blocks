@@ -345,6 +345,8 @@ export class Collection<
     if (index > -1) {
       this.data[index] = updatedItem
     }
+
+    return updatedItem
   }
 
   /**

@@ -77,7 +77,7 @@ export interface ICollectionConfig<
   /**
    * TODO: Docs
    */
-  editFn?: (id: string | number, updates: Omit<Partial<TItem>, "id">) => Promise<TItem>
+  editFn?: (id: string | number, updates: Omit<Partial<TItem>, "id">) => Promise<TItem | undefined>
 
   /**
    * Optional method to handle API request thrown errors, e.g. to render a toast notification
