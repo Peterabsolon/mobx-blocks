@@ -53,7 +53,7 @@ products.filters.replace({ title: "Bar" }) // valid:false gets removed, fetchFn 
 products.filters.reset() // reset to initialFilters, fetchFn call
 ```
 
-### Selection (TODO)
+### Selection
 
 ```typescript
 const products = new Collection({ fetchFn })
@@ -62,6 +62,7 @@ await products.fetch()
 
 products.selection.select(products.data.?[0]) // added to selection
 products.selection.select(products.data.?[0]) // removed from selection
+products.selection.set(products.data) // select all products
 ```
 
 ### Caching
