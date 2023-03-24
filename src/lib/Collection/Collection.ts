@@ -240,7 +240,7 @@ export class Collection<
   // Public methods
   // ====================================================
   /**
-   * Fetches data from your API and save data to collection
+   * Fetches data from your API and saves data to collection
    */
   fetch = async (
     opts: TPagination extends CursorPagination
@@ -322,11 +322,18 @@ export class Collection<
   }
 
   /**
-   * Perform debounced search using search query and fetch filters
+   * Perform debounced search request
    */
   search = async (query: string, opts: IFetchFnOptions<TFilters, TSortBy> = {}) => {
     this.searchQuery = query
     return this.handleSearch(opts)
+  }
+
+  /**
+   * Swaps two items from/to indexes
+   */
+  moveItem = (from: number, to: number) => {
+    this.data.splice(to, 0, this.data.splice(from, 1)[0])
   }
 
   // ====================================================

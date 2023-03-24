@@ -8,7 +8,7 @@ import { Collection } from "./Collection"
 
 configure({ safeDescriptors: false })
 
-const TEST_DATA = [{ id: "1" }]
+const TEST_DATA = [{ id: "1" }, { id: "2" }]
 const TOTAL_COUNT = TEST_DATA.length
 
 const fetchFn = jest.fn(() =>
@@ -68,7 +68,7 @@ describe("Collection", () => {
       expect(c.fetching).toBe(true)
       await fetchFn()
 
-      expect(c.data.length).toBe(1)
+      expect(c.data.length).toBe(TOTAL_COUNT)
       expect(c.fetching).toBe(false)
     })
 
@@ -424,6 +424,15 @@ describe("Collection", () => {
       const c = new Collection({ fetchFn })
       const res = await c.fetchOne("1")
       expect(res).toBe(undefined)
+    })
+  })
+
+  describe("moveItem", () => {
+    it("swaps item from/to indxes", async () => {
+      const c = new Collection({ fetchFn })
+      await c.fetch()
+      c.moveItem(0, 1)
+      expect(c.data[0].id).toBe("2")
     })
   })
 
