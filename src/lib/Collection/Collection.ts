@@ -25,6 +25,11 @@ export class Collection<
   data = observable<TItem>([])
 
   /**
+   * TODO: Docs
+   */
+  meta = observable({})
+
+  /**
    * Has fetched some data?
    */
   initialized = false
@@ -148,7 +153,10 @@ export class Collection<
 
     try {
       const data = await searchFn(this.searchQuery)
+
       this.data.replace(data)
+
+      this.savePaginationState({ totalCount: data.length })
     } catch (err) {
       this.searchErr = err
 
@@ -171,7 +179,7 @@ export class Collection<
 
     try {
       if (cache) {
-        const cached = cache.readQuery(this.queryString)
+        const cached = cache.getQuery(this.queryString)
         if (cached && !cached.isStale(new Date())) {
           this.data.replace(cached.data)
           this.savePaginationState(cached)
@@ -218,7 +226,7 @@ export class Collection<
     nextPageCursor?: string | null
     totalCount?: number
   }) => {
-    if (state.totalCount) {
+    if (state.totalCount || state.totalCount === 0) {
       this.pagination.setTotalCount(state.totalCount)
       this.cursorPagination.setTotalCount(state.totalCount)
     }
@@ -295,7 +303,7 @@ export class Collection<
     const { cache } = this.config
 
     if (cache && opts?.useCache) {
-      const item = cache.readOne(id)
+      const item = cache.get(id)
       if (item && !item.isStale(new Date())) {
         return item.data
       }
@@ -308,7 +316,7 @@ export class Collection<
     const data = await this.config.fetchOneFn(id)
 
     if (cache && data) {
-      cache.updateOne(id, data)
+      cache.save(data)
     }
 
     return data
@@ -338,7 +346,7 @@ export class Collection<
     }
 
     if (cache) {
-      cache.updateOne(id, updatedItem)
+      cache.save(updatedItem)
     }
 
     const index = this.data.findIndex((item) => item.id === id)
@@ -354,6 +362,27 @@ export class Collection<
    */
   moveItem = (from: number, to: number) => {
     this.data.splice(to, 0, this.data.splice(from, 1)[0])
+  }
+
+  /**
+   * TODO: Docs
+   */
+  removeItem = (item: TItem) => {
+    // Delete data from this collection
+    this.data.replace(this.data.filter((x) => x.id !== item.id))
+
+    // Update pagination state
+    this.pagination.setTotalCount((this.pagination.totalCount || 1) - 1)
+
+    // Go page back if deleted as last item on this page
+    if (this.data.length === 0) {
+      this.pagination.goToPrev()
+    }
+
+    // Invalidate cache
+    if (this.config.cache) {
+      this.config.cache.clear()
+    }
   }
 
   // ====================================================

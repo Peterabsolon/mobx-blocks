@@ -1,3 +1,4 @@
+import { merge } from "lodash"
 import { makeAutoObservable } from "mobx"
 
 import { timeDeltaInMinutes } from "../util"
@@ -29,7 +30,11 @@ export class CacheItem<TItem extends IObjectWithId> {
   // ====================================================
   // Actions
   // ====================================================
-  update = (data: TItem) => {
-    this.data = data
+  update = (data: TItem, opts = { merge: true }) => {
+    if (opts?.merge) {
+      this.data = merge(this.data, data)
+    } else {
+      this.data = data
+    }
   }
 }

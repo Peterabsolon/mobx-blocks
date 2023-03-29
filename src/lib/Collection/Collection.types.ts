@@ -1,3 +1,4 @@
+import { IObservableValue } from "mobx"
 import { Cache } from "../Cache"
 import { ICursorPaginationParams, CursorPagination } from "../CursorPagination"
 import { IPaginationParams, Pagination } from "../Pagination"
@@ -133,6 +134,11 @@ export interface ICollectionConfig<
    * Cache TTL for this collection, in minutes
    */
   cacheTtl?: number
+
+  /**
+   * TODO: Docs
+   */
+  meta?: IObservableValue<Record<string, any>>
 }
 
 export interface IFetchFnOptions<

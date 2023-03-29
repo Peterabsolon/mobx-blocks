@@ -37,12 +37,12 @@ export class Cache<TItem extends IObjectWithId> {
     this.ttl = ttl
 
     if (initialData) {
-      const items = initialData.reduce((acc, item) => {
-        acc.push([item.id.toString(), new CacheItem(item, this.ttl)])
-        return acc
-      }, [] as [string, CacheItem<TItem>][])
-
-      this.items.replace(items)
+      this.items.replace(
+        initialData.reduce((acc: [string, CacheItem<TItem>][], item: TItem) => {
+          acc.push([item.id.toString(), new CacheItem(item, this.ttl)])
+          return acc
+        }, [])
+      )
     }
   }
 
@@ -56,25 +56,29 @@ export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   // Actions
   // ====================================================
-  saveOne = (item: TItem) => {
+  set = (item: TItem) => {
     const cacheItem = new CacheItem(item, this.ttl)
     this.items.set(cacheItem.id, cacheItem)
     return cacheItem
   }
 
-  readOne = (id: string | number): CacheItem<TItem> | undefined => {
+  get = (id: string | number): CacheItem<TItem> | undefined => {
+    console.log("getting by id from cache", id)
     return this.items.get(id.toString())
   }
 
-  updateOne = (id: string | number, item: TItem) => {
-    const cachedItem = this.readOne(id)
-    if (cachedItem) {
-      cachedItem.update(item)
-      return cachedItem.data
+  save = (item: TItem, opts = { merge: true }) => {
+    const cached = this.get(item.id)
+    if (cached) {
+      cached.update(item, opts)
+      return cached.data
     }
 
-    const newCachedItem = this.saveOne(item)
-    return newCachedItem.data
+    return this.set(item).data
+  }
+
+  delete = (id: string | number) => {
+    this.items.delete(id.toString())
   }
 
   saveQuery = (
@@ -86,7 +90,15 @@ export class Cache<TItem extends IObjectWithId> {
       totalCount?: number
     }
   ) => {
-    const items = data.map(this.saveOne)
+    const items = data.map((item) => {
+      const cached = this.get(item.id)
+      if (cached) {
+        cached.update(item)
+        return cached
+      }
+
+      return this.set(item)
+    })
 
     const query = new CacheQuery(
       items,
@@ -101,7 +113,12 @@ export class Cache<TItem extends IObjectWithId> {
     return query
   }
 
-  readQuery = (queryString: string): CacheQuery<TItem> | undefined => {
+  getQuery = (queryString: string): CacheQuery<TItem> | undefined => {
     return this.queries.get(queryString)
+  }
+
+  clear = () => {
+    this.items.clear()
+    this.queries.clear()
   }
 }

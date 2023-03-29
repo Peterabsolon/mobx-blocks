@@ -464,7 +464,7 @@ describe("Collection", () => {
 
       expect(editFn).toBeCalledWith(id, updates)
       expect(c.data.find((item) => item.id === id)?.name).toBe("Banana")
-      expect(cache.readOne(id)?.data?.name).toBe("Banana")
+      expect(cache.get(id)?.data?.name).toBe("Banana")
       expect(res).toEqual({ id, ...updates })
     })
 

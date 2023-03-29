@@ -21,11 +21,20 @@ it("sets initial state from config", () => {
   expect(c.data).toEqual(TEST_ITEMS)
 })
 
-describe("saveOne", () => {
-  it("saves some item, can be retrieved", () => {
+describe("set", () => {
+  it("sets some item, can be retrieved", () => {
     const c = new Cache()
-    c.saveOne({ id: "Foo" })
-    expect(c.readOne("Foo")?.data).toEqual({ id: "Foo" })
+    c.set({ id: "Foo" })
+    expect(c.get("Foo")?.data).toEqual({ id: "Foo" })
+  })
+})
+
+describe("delete", () => {
+  it("deletes saved item", () => {
+    const c = new Cache()
+    c.set({ id: "Foo" })
+    c.delete("Foo")
+    expect(c.get("Foo")).toEqual(undefined)
   })
 })
 
@@ -36,8 +45,8 @@ describe("setQuery", () => {
 
     c.saveQuery("?foo=bar", [data], {})
 
-    const item = c.readOne("Foo")?.data
-    const itemInQuery = c.readQuery("?foo=bar")?.data[0]
+    const item = c.get("Foo")?.data
+    const itemInQuery = c.getQuery("?foo=bar")?.data[0]
 
     expect(item).toEqual(data)
     expect(itemInQuery).toEqual(data)
@@ -151,4 +160,5 @@ describe("setQuery", () => {
 // read
 // write
 // clear
+
 // invalidate item/query

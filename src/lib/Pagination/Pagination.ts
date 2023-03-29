@@ -47,7 +47,7 @@ export class Pagination {
       return true
     }
 
-    const count = page * this.pageSize
+    const count = (page - 1) * this.pageSize
 
     return this.page > 0 && count <= this.totalCount
   }
