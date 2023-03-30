@@ -6,6 +6,7 @@
   "types": "build/types/index.d.ts",
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
+    "dev": "webpack --watch",
     "build": "webpack && tsc",
     "test": "jest ./src/lib",
     "test:integration": "cd ./src/demo && npm run test",

@@ -63,7 +63,6 @@ export class Cache<TItem extends IObjectWithId> {
   }
 
   get = (id: string | number): CacheItem<TItem> | undefined => {
-    console.log("getting by id from cache", id)
     return this.items.get(id.toString())
   }
 

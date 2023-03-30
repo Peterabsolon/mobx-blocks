@@ -9,6 +9,7 @@ import { Filters } from "../Filters"
 
 import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
 import { Selection } from "../Selection"
+import { parseQueryString } from "./Collection.utils"
 
 export class Collection<
   TItem extends IObjectWithId,
@@ -100,7 +101,7 @@ export class Collection<
     })
 
     if (config.syncParamsToUrl) {
-      reaction(() => this.filters.params, this.syncQueryParamsToUrl)
+      reaction(() => this.queryParams, this.syncQueryParamsToUrl)
     }
   }
 
@@ -108,6 +109,8 @@ export class Collection<
   // Computed
   // ====================================================
   get queryParamsWithoutPagination() {
+    console.log("filters", this.filters.params)
+
     return {
       ...this.filters.params,
       ...this.sorting.params,
@@ -133,14 +136,37 @@ export class Collection<
   }
 
   get queryString(): string {
-    return qs.stringify(this.queryParams)
+    return qs.stringify(this.queryParams, { encode: false })
   }
 
   // ====================================================
   // Private methods
   // ====================================================
   private syncQueryParamsToUrl = () => {
-    history.replaceState("", "", `${location.pathname}?${qs.stringify(this.queryParams)}`)
+    console.log("window.location", window.location)
+    console.log("this.queryString", this.queryString)
+
+    // const pathnameWithoutSearch = window.location.pathname.split("?")[0]
+
+    // console.log({ pathnameWithoutSearch })
+
+    // const qs = this.queryString.includes("?") ? this.queryString : `?${this.queryString}`
+
+    // console.log({ qs })
+
+    // console.log(this.queryString, this.queryString)
+
+    // const url = new URL(`${window.location.origin}${pathnameWithoutSearch}${qs}`)
+
+    // console.log({ url })
+
+    // history.replaceState("", "", url)
+
+    window.history.replaceState(
+      "",
+      "",
+      `${window.location.pathname}?${this.queryString.replace("?", "")}`
+    )
   }
 
   private handleSearch = async (opts?: { shouldThrowError?: boolean }) => {
@@ -255,7 +281,7 @@ export class Collection<
       ? IFetchFnCursorOptions<TFilters, TSortBy>
       : IFetchFnOptions<TFilters, TSortBy> = {}
   ) => {
-    const { clearFilters, query, sortBy, sortAscending, page, pageSize, pageCursor } = opts
+    const { page, pageCursor, pageSize, sortBy, sortAscending, clearFilters, filters = {} } = opts
 
     if (clearFilters) {
       this.filters.clear()
@@ -272,9 +298,8 @@ export class Collection<
       this.sorting.setAscending(sortAscending)
     }
 
-    const filters = query ? qs.parse(query) : opts.filters
-    if (filters) {
-      this.filters.merge(filters as TFilters)
+    if (Object.keys(filters).length > 0) {
+      this.filters.merge(filters)
     }
 
     if (page) {
@@ -393,7 +418,9 @@ export class Collection<
    */
   init = async (opts: IFetchFnOptions<TFilters, TSortBy> = {}): Promise<void> => {
     if (!this.initialized) {
-      await this.fetch(opts)
+      const parsedQuery = parseQueryString<TSortBy, TFilters>(opts.query)
+
+      await this.fetch({ ...parsedQuery, ...opts })
     }
   }
 
