@@ -367,6 +367,23 @@ export class Collection<
   }
 
   /**
+   * TODO: Docs
+   */
+  addItem = (item: TItem) => {
+    if (this.config.cache) {
+      this.config.cache.save(item)
+    }
+
+    const existingIndex = this.data.findIndex((i) => i.id === item.id)
+    if (existingIndex > -1) {
+      this.data.splice(existingIndex, 1, item)
+      return
+    }
+
+    this.data.push(item)
+  }
+
+  /**
    * Swaps two items from/to indexes
    */
   moveItem = (from: number, to: number) => {

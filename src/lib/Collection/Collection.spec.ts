@@ -487,6 +487,34 @@ describe("Collection", () => {
     })
   })
 
+  describe("addItem", () => {
+    it("pushes item to data array if item does not exist", () => {
+      const c = new Collection({ fetchFn })
+      const item = { id: "5", name: "Banana" }
+      c.addItem(item)
+      expect(c.data[0]).toEqual(item)
+    })
+
+    it("updates existing item if exists", () => {
+      const c = new Collection({ fetchFn })
+      const item = { id: "5", name: "Banana" }
+      const itemUpdated = { id: "5", name: "Dog" }
+      c.addItem(item)
+      c.addItem(itemUpdated)
+      expect(c.data[0].name).toEqual(itemUpdated.name)
+    })
+
+    it("updates cached item if exists", () => {
+      const cache = new Cache({ ttl: 3 })
+      const c = new Collection({ fetchFn, cache })
+
+      const item = { id: "5", name: "Banana" }
+      c.addItem(item)
+
+      expect(cache.get("5")?.data).toEqual(item)
+    })
+  })
+
   describe("moveItem", () => {
     it("swaps item from/to indxes", async () => {
       const c = new Collection({ fetchFn })
