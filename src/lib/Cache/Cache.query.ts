@@ -4,7 +4,7 @@ import { timeDeltaInMinutes } from "../util"
 
 import { CacheItem } from "./Cache.item"
 
-export class CacheQuery<TItem extends IObjectWithId> {
+export class CacheQuery<TItem extends IAnyObject> {
   // ====================================================
   // State
   // ====================================================

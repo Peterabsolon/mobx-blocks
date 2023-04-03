@@ -1,9 +1,9 @@
 import { merge } from "lodash"
 import { makeAutoObservable } from "mobx"
 
-import { timeDeltaInMinutes } from "../util"
+import { timeDeltaInMinutes, uuid } from "../util"
 
-export class CacheItem<TItem extends IObjectWithId> {
+export class CacheItem<TItem extends IAnyObject> {
   // ====================================================
   // Model
   // ====================================================
@@ -16,7 +16,7 @@ export class CacheItem<TItem extends IObjectWithId> {
   constructor(public data: TItem, public ttl: number) {
     makeAutoObservable(this)
 
-    this.id = this.data.id.toString()
+    this.id = (this.data.id || uuid()).toString()
     this.cachedAt = new Date()
   }
 

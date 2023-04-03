@@ -139,6 +139,16 @@ export interface ICollectionConfig<
    * TODO: Docs
    */
   meta?: IObservableValue<Record<string, any>>
+
+  /**
+   * TODO: Docs
+   */
+  preserveSelectedOnSearch?: boolean
+
+  /**
+   * TODO: Docs
+   */
+  excludeSelectedFromResults?: boolean
 }
 
 export interface IFetchFnOptions<

@@ -109,8 +109,6 @@ export class Collection<
   // Computed
   // ====================================================
   get queryParamsWithoutPagination() {
-    console.log("filters", this.filters.params)
-
     return {
       ...this.filters.params,
       ...this.sorting.params,
@@ -140,33 +138,10 @@ export class Collection<
   }
 
   // ====================================================
-  // Private methods
+  // Private
   // ====================================================
   private syncQueryParamsToUrl = () => {
-    console.log("window.location", window.location)
-    console.log("this.queryString", this.queryString)
-
-    // const pathnameWithoutSearch = window.location.pathname.split("?")[0]
-
-    // console.log({ pathnameWithoutSearch })
-
-    // const qs = this.queryString.includes("?") ? this.queryString : `?${this.queryString}`
-
-    // console.log({ qs })
-
-    // console.log(this.queryString, this.queryString)
-
-    // const url = new URL(`${window.location.origin}${pathnameWithoutSearch}${qs}`)
-
-    // console.log({ url })
-
-    // history.replaceState("", "", url)
-
-    window.history.replaceState(
-      "",
-      "",
-      `${window.location.pathname}?${this.queryString.replace("?", "")}`
-    )
+    history.replaceState("", "", `${location.pathname}?${this.queryString.replace("?", "")}`)
   }
 
   private handleSearch = async (opts?: { shouldThrowError?: boolean }) => {
@@ -180,7 +155,11 @@ export class Collection<
     try {
       const data = await searchFn(this.searchQuery)
 
-      this.data.replace(data)
+      if (this.config.preserveSelectedOnSearch) {
+        this.data.replace(data)
+      } else {
+        this.data.replace(data)
+      }
 
       this.savePaginationState({ totalCount: data.length })
     } catch (err) {
@@ -352,6 +331,11 @@ export class Collection<
    */
   search = async (query: string, opts: IFetchFnOptions<TFilters, TSortBy> = {}) => {
     this.searchQuery = query
+
+    if (!this.config.preserveSelectedOnSearch) {
+      this.selection.reset()
+    }
+
     return this.handleSearch(opts)
   }
 

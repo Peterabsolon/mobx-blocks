@@ -18,7 +18,7 @@ export interface ICacheConfig<TItem extends IAnyObject> {
   initialData?: TItem[]
 }
 
-export class Cache<TItem extends IObjectWithId> {
+export class Cache<TItem extends IAnyObject> {
   // ====================================================
   // State
   // ====================================================
