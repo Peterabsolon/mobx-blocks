@@ -41,7 +41,7 @@ export interface ICollectionGenericsDefaults {
 }
 
 export interface ICollectionConfig<
-  TItem extends IObjectWithId,
+  TItem extends IAnyObject,
   TFilters extends Record<string, any>,
   TSortBy extends string | undefined,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined

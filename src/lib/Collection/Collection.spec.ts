@@ -28,7 +28,7 @@ const fetchFn = jest.fn(() =>
 
 const fetchFnCursor = jest.fn(() =>
   Promise.resolve({
-    data: [{ id: "1" }],
+    data: [{ id: "1" }] as ITestItem[],
     pageCursor: "baz",
     nextPageCursor: "foo",
     prevPageCursor: "bar",
@@ -37,7 +37,7 @@ const fetchFnCursor = jest.fn(() =>
 
 const fetchFnCursorAndTotal = jest.fn(() =>
   Promise.resolve({
-    data: [{ id: "1" }],
+    data: [{ id: "1" }] as ITestItem[],
     nextPageCursor: "foo",
     prevPageCursor: "bar",
     totalCount: TOTAL_COUNT,

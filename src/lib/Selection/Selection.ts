@@ -1,6 +1,6 @@
 import { makeAutoObservable, observable } from "mobx"
 
-export class Selection<TItem extends IObjectWithId> {
+export class Selection<TItem extends IAnyObject> {
   // ====================================================
   // Model
   // ====================================================

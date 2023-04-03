@@ -12,7 +12,7 @@ import { Selection } from "../Selection"
 import { parseQueryString } from "./Collection.utils"
 
 export class Collection<
-  TItem extends IObjectWithId,
+  TItem extends IAnyObject,
   TFilters extends Record<string, any>,
   TSortBy extends string,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
@@ -186,7 +186,7 @@ export class Collection<
       if (cache) {
         const cached = cache.getQuery(this.queryString)
         if (cached && !cached.isStale(new Date())) {
-          this.data.replace(cached.data)
+          this.data.replace(cached.data as TItem[])
           this.savePaginationState(cached)
 
           return {
@@ -309,7 +309,7 @@ export class Collection<
     if (cache && opts?.useCache) {
       const item = cache.get(id)
       if (item && !item.isStale(new Date())) {
-        return item.data
+        return item.data as TItem
       }
     }
 
