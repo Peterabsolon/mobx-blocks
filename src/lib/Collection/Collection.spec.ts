@@ -11,6 +11,7 @@ configure({ safeDescriptors: false })
 interface ITestItem {
   id: string | number
   name?: string
+  active?: boolean
 }
 
 const TEST_DATA: ITestItem[] = [
@@ -495,23 +496,29 @@ describe("Collection", () => {
       expect(c.data[0]).toEqual(item)
     })
 
-    it("updates existing item if exists", () => {
+    it("merges data to existing item if exists", () => {
       const c = new Collection({ fetchFn })
-      const item = { id: "5", name: "Banana" }
+      const item = { id: "5", name: "Banana", active: true }
       const itemUpdated = { id: "5", name: "Dog" }
+
       c.addItem(item)
       c.addItem(itemUpdated)
-      expect(c.data[0].name).toEqual(itemUpdated.name)
+
+      expect(c.data[0].active).toEqual(true)
+      expect(c.data[0].name).toEqual("Dog")
     })
 
-    it("updates cached item if exists", () => {
+    it("merges data to cached item if exists", () => {
       const cache = new Cache({ ttl: 3 })
       const c = new Collection({ fetchFn, cache })
+      const item = { id: "5", name: "Banana", active: true }
+      const itemUpdated = { id: "5", name: "Dog" }
 
-      const item = { id: "5", name: "Banana" }
       c.addItem(item)
+      c.addItem(itemUpdated)
 
-      expect(cache.get("5")?.data).toEqual(item)
+      expect(cache.get("5")?.data?.active).toEqual(true)
+      expect(cache.get("5")?.data?.name).toEqual("Dog")
     })
   })
 

@@ -10,6 +10,7 @@ import { Filters } from "../Filters"
 import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
 import { Selection } from "../Selection"
 import { parseQueryString } from "./Collection.utils"
+import { merge } from "lodash"
 
 export class Collection<
   TItem extends IAnyObject,
@@ -368,6 +369,7 @@ export class Collection<
 
   /**
    * TODO: Docs
+   * TODO: Add opts.merge: boolean
    */
   addItem = (item: TItem) => {
     if (this.config.cache) {
@@ -376,7 +378,7 @@ export class Collection<
 
     const existingIndex = this.data.findIndex((i) => i.id === item.id)
     if (existingIndex > -1) {
-      this.data.splice(existingIndex, 1, item)
+      this.data[existingIndex] = merge(this.data[existingIndex], item)
       return
     }
 
