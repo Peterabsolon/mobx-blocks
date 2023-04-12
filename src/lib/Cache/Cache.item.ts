@@ -9,15 +9,17 @@ export class CacheItem<TItem extends IAnyObject> {
   // ====================================================
   id: string
   cachedAt: Date
+  data: TItem = {} as TItem
 
   // ====================================================
   // Constructor
   // ====================================================
-  constructor(public data: TItem, public ttl: number) {
+  constructor(private props: TItem, public ttl: number) {
     makeAutoObservable(this)
 
-    this.id = (this.data.id || uuid()).toString()
+    this.id = (this.props.id || uuid()).toString()
     this.cachedAt = new Date()
+    this.data = props
   }
 
   // ====================================================
@@ -36,5 +38,12 @@ export class CacheItem<TItem extends IAnyObject> {
     } else {
       this.data = data
     }
+
+    return this.data as TItem
+  }
+
+  merge = (data: Partial<TItem>) => {
+    this.data = merge(this.data, data)
+    return this.data
   }
 }

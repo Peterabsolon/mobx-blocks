@@ -5,7 +5,7 @@ import { CacheQuery } from "./Cache.query"
 
 const DEFAULT_TTL_MINUTES = 5
 
-export interface ICacheConfig<TItem extends IAnyObject> {
+export interface ICacheConfig<TItem extends IObjectWithId> {
   /**
    * How long should cached items or queries be used before refreshing, in minutes
    * @default 5
@@ -18,7 +18,7 @@ export interface ICacheConfig<TItem extends IAnyObject> {
   initialData?: TItem[]
 }
 
-export class Cache<TItem extends IAnyObject> {
+export class Cache<TItem extends IObjectWithId> {
   // ====================================================
   // State
   // ====================================================
@@ -66,18 +66,23 @@ export class Cache<TItem extends IAnyObject> {
     return this.items.get(id.toString())
   }
 
-  save = (item: TItem, opts = { merge: true }) => {
+  save = (item: Pick<TItem, "id"> & Partial<TItem>): TItem => {
+    this.invalidateQueries()
+
     const cached = this.get(item.id)
     if (cached) {
-      cached.update(item, opts)
-      return cached.data
+      return cached.merge(item)
     }
 
-    return this.set(item).data
+    return this.set(item as TItem).data
   }
 
   delete = (id: string | number) => {
     this.items.delete(id.toString())
+  }
+
+  invalidateQueries = () => {
+    this.queries.clear()
   }
 
   saveQuery = (

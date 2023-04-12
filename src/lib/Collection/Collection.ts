@@ -1,6 +1,7 @@
-import { makeAutoObservable, observable, reaction } from "mobx"
+import { ObservableMap, makeAutoObservable, observable, reaction } from "mobx"
 import debounce from "debounce-promise"
 import qs from "query-string"
+import { merge } from "lodash"
 
 import { Pagination } from "../Pagination"
 import { CursorPagination } from "../CursorPagination"
@@ -10,10 +11,9 @@ import { Filters } from "../Filters"
 import { ICollectionConfig, IFetchFnCursorOptions, IFetchFnOptions } from "./Collection.types"
 import { Selection } from "../Selection"
 import { parseQueryString } from "./Collection.utils"
-import { merge } from "lodash"
 
 export class Collection<
-  TItem extends IAnyObject,
+  TItem extends IObjectWithId,
   TFilters extends Record<string, any>,
   TSortBy extends string,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
@@ -109,6 +109,10 @@ export class Collection<
   // ====================================================
   // Computed
   // ====================================================
+  get map(): ObservableMap<string | number, TItem> {
+    return new ObservableMap(this.data.map((item) => [item.id, item]))
+  }
+
   get queryParamsWithoutPagination() {
     return {
       ...this.filters.params,
@@ -178,7 +182,7 @@ export class Collection<
     }
   }
 
-  private handleFetch = async (opts?: { shouldThrowError?: boolean }) => {
+  private handleFetch = async (opts?: { shouldThrowError?: boolean; append?: boolean }) => {
     const { fetchFn, errorHandlerFn, cache } = this.config
 
     this.fetching = true
@@ -187,7 +191,7 @@ export class Collection<
       if (cache) {
         const cached = cache.getQuery(this.queryString)
         if (cached && !cached.isStale(new Date())) {
-          this.data.replace(cached.data as TItem[])
+          this.data.replace((opts?.append ? this.data.concat(cached.data) : cached.data) as TItem[])
           this.savePaginationState(cached)
 
           return {
@@ -199,7 +203,7 @@ export class Collection<
 
       // TODO: remove any
       const res = await fetchFn(this.queryParams as any)
-      this.data.replace(res.data)
+      this.data.replace(opts?.append ? this.data.concat(res.data) : res.data)
 
       if (cache) {
         cache.saveQuery(this.queryString, res.data, res)
@@ -303,7 +307,7 @@ export class Collection<
    */
   fetchOne = async (
     id: string | number,
-    opts?: { useCache?: boolean }
+    opts?: { useCache?: boolean; append?: boolean; prepend?: boolean }
   ): Promise<TItem | undefined> => {
     const { cache } = this.config
 
@@ -318,13 +322,20 @@ export class Collection<
       return undefined
     }
 
-    const data = await this.config.fetchOneFn(id)
+    const item = await this.config.fetchOneFn(id)
+    if (item) {
+      if (cache) {
+        cache.save(item)
+      }
 
-    if (cache && data) {
-      cache.save(data)
+      if (opts?.append) {
+        this.data.push(item)
+      } else if (opts?.prepend) {
+        this.data.unshift(item)
+      }
     }
 
-    return data
+    return item
   }
 
   /**

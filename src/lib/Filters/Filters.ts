@@ -39,7 +39,15 @@ export class Filters<TFilters extends IAnyObject> {
   // Computed
   // ====================================================
   get params(): Partial<TFilters> {
-    return observable(Object.fromEntries(this.active))
+    const lol = JSON.stringify(Object.fromEntries(this.active))
+
+    console.log(`[blocks] lol`, lol)
+
+    const res = observable(Object.fromEntries(this.active))
+
+    console.log(`[blocks] params`, res)
+
+    return res
   }
 
   // ====================================================
@@ -51,6 +59,8 @@ export class Filters<TFilters extends IAnyObject> {
 
   set = <K extends keyof TFilters>(key: K, value: TFilters[K]) => {
     this.active.set(key, value)
+
+    console.log(`[blocks] after setting`, this.active)
   }
 
   merge = (filters: Partial<TFilters>) => {
@@ -73,7 +83,3 @@ export class Filters<TFilters extends IAnyObject> {
     this.active.replace(this.initial)
   }
 }
-
-const filters = new Filters({ initial: { foo: "2", bar: 2 } })
-
-filters.set("foo", "bar")

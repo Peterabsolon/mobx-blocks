@@ -36,6 +36,18 @@ export class Selection<TItem extends IAnyObject> {
     this.selected.replace(items)
   }
 
+  add = (item: TItem) => {
+    this.selected.push(item)
+  }
+
+  remove = (item: TItem) => {
+    this.selected.remove(item)
+  }
+
+  moveItem = (from: number, to: number) => {
+    this.selected.splice(to, 0, this.selected.splice(from, 1)[0])
+  }
+
   reset = () => {
     this.selected.clear()
   }

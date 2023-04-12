@@ -41,7 +41,7 @@ export interface ICollectionGenericsDefaults {
 }
 
 export interface ICollectionConfig<
-  TItem extends IAnyObject,
+  TItem extends IObjectWithId,
   TFilters extends Record<string, any>,
   TSortBy extends string | undefined,
   TPagination extends typeof Pagination | typeof CursorPagination | undefined
@@ -201,6 +201,11 @@ export interface IFetchFnOptions<
    * If using cursor based pagination, the page cursor
    */
   pageCursor?: string
+
+  /**
+   * If true, the new results are appeneded to existing
+   */
+  append?: boolean
 }
 
 export interface IFetchFnCursorOptions<
