@@ -66,7 +66,7 @@ export class Cache<TItem extends IObjectWithId> {
     return this.items.get(id.toString())
   }
 
-  save = (item: Pick<TItem, "id"> & Partial<TItem>): TItem => {
+  save = (item: TItem): TItem => {
     this.invalidateQueries()
 
     const cached = this.get(item.id)
