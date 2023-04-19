@@ -532,22 +532,6 @@ describe("Collection", () => {
   })
 
   describe("init", () => {
-    it("calls fetchFn once", async () => {
-      // local mock fn copy so we can assert call times correctly
-      const fetchFn = jest.fn(() =>
-        Promise.resolve({
-          data: [{ id: "1" }],
-          totalCount: 1,
-        })
-      )
-
-      const c = new Collection({ fetchFn })
-      await c.init()
-      expect(fetchFn).toBeCalledWith({})
-      c.init()
-      expect(fetchFn).toBeCalledTimes(1)
-    })
-
     it("calls fetchFn once with passed options", async () => {
       const c = new Collection({ fetchFn, initialFilters: { foo: "foo" } })
       await c.init({ filters: { foo: "bar" } })

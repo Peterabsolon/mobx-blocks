@@ -428,14 +428,11 @@ export class Collection<
   // Lifecycle
   // ====================================================
   /**
-   * Performs the initial fetch, skips if initiliazed already
+   * Performs the initial fetch, parses query string if passed
    */
   init = async (opts: IFetchFnOptions<TFilters, TSortBy> = {}): Promise<void> => {
-    if (!this.initialized) {
-      const parsedQuery = parseQueryString<TSortBy, TFilters>(opts.query)
-
-      await this.fetch({ ...parsedQuery, ...opts })
-    }
+    const parsedQuery = parseQueryString<TSortBy, TFilters>(opts.query)
+    await this.fetch({ ...parsedQuery, ...opts })
   }
 
   /**
