@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable } from "mobx"
+import { ObservableMap, makeAutoObservable, observable } from "mobx"
 
 export class Selection<TItem extends IAnyObject> {
   // ====================================================
@@ -18,6 +18,10 @@ export class Selection<TItem extends IAnyObject> {
   // ====================================================
   get ids() {
     return this.selected.map((item) => item.id)
+  }
+
+  get map(): ObservableMap<string | number, TItem> {
+    return new ObservableMap(this.selected.map((item) => [item.id, item]))
   }
 
   // ====================================================
