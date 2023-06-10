@@ -161,7 +161,7 @@ export class Collection<
       const data = await searchFn(this.searchQuery)
 
       if (this.config.preserveSelectedOnSearch) {
-        this.data.replace(data)
+        this.data.replace(this.data.concat(data))
       } else {
         this.data.replace(data)
       }
@@ -422,6 +422,10 @@ export class Collection<
     if (this.config.cache) {
       this.config.cache.clear()
     }
+  }
+
+  configure = (config: ICollectionConfig<TItem, TFilters, TSortBy, TPagination>) => {
+    this.config = observable({ ...this.config, ...config })
   }
 
   // ====================================================
