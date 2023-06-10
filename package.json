@@ -8,6 +8,7 @@
     "start": "webpack serve --config webpack.config.demo.js",
     "dev": "webpack --watch",
     "build": "webpack && tsc",
+    "build:watch": "webpack --watch && tsc --watch",
     "test": "jest ./src/lib",
     "test:integration": "cd ./src/demo && npm run test",
     "test:all": "CI=true npm run test && CI=true npm run test:integration",
