@@ -334,7 +334,7 @@ describe("Collection", () => {
       jest.runAllTimers()
       await promise
 
-      expect(searchFn).toBeCalledWith("someThirdQuery")
+      expect(searchFn).toBeCalledWith("someThirdQuery", {})
       expect(searchFn).toBeCalledTimes(1)
     })
 
@@ -385,6 +385,34 @@ describe("Collection", () => {
       await c.search("someQuery")
 
       expect(errorHandlerFn).toBeCalledWith(error)
+    })
+
+    it("clears existing filters when opts.clearFilters is true", async () => {
+      jest.useFakeTimers()
+
+      const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+      const c = new Collection({ fetchFn, searchFn })
+
+      c.filters.set("foo", "bar")
+      c.search("someQuery", { clearFilters: true })
+
+      jest.runAllTimers()
+      await searchFn()
+      expect(searchFn).toBeCalledWith("someQuery", {})
+    })
+
+    it("calls searchFn with existing filters when opts.clearFilters is false", async () => {
+      jest.useFakeTimers()
+
+      const searchFn = jest.fn(() => Promise.resolve([{ id: "1" }]))
+      const c = new Collection({ fetchFn, searchFn })
+
+      c.filters.set("foo", "bar")
+      c.search("someQuery", { clearFilters: false })
+
+      jest.runAllTimers()
+      await searchFn()
+      expect(searchFn).toBeCalledWith("someQuery", { foo: "bar" })
     })
   })
 

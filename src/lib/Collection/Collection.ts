@@ -149,7 +149,11 @@ export class Collection<
     history.replaceState("", "", `${location.pathname}?${this.queryString.replace("?", "")}`)
   }
 
-  private handleSearch = async (opts?: { shouldThrowError?: boolean; append?: boolean }) => {
+  private handleSearch = async (opts?: {
+    shouldThrowError?: boolean
+    append?: boolean
+    clearFilters?: boolean
+  }) => {
     const { searchFn, errorHandlerFn } = this.config
     if (!searchFn) {
       return
@@ -157,12 +161,19 @@ export class Collection<
 
     this.searching = true
 
+    if (opts?.clearFilters) {
+      this.filters.clear()
+      this.pagination.reset()
+      this.cursorPagination.reset()
+      this.sorting.reset()
+    }
+
     try {
       if (!this.config.preserveSelectedOnSearch) {
         this.selection.reset()
       }
 
-      const data = await searchFn(this.searchQuery)
+      const data = await searchFn(this.searchQuery, this.filters.params as TFilters)
 
       if (opts?.append) {
         this.data.replace(this.data.concat(data))
