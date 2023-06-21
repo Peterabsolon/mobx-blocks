@@ -1,6 +1,6 @@
 {
   "name": "mobx-blocks",
-  "version": "0.0.0-rc23",
+  "version": "0.0.0-rc24",
   "description": "react-query wannabe for people who like MobX or keeping their logic and view layers separate",
   "main": "build/index.js",
   "types": "build/types/index.d.ts",
