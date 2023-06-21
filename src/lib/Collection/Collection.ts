@@ -452,6 +452,7 @@ export class Collection<
    * Performs the initial fetch, parses query string if passed
    */
   init = async (opts: IFetchFnOptions<TFilters, TSortBy> = {}): Promise<void> => {
+    if (this.fetching) return
     const parsedQuery = parseQueryString<TSortBy, TFilters>(opts.query)
     await this.fetch({ ...parsedQuery, ...opts })
   }

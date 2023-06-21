@@ -45,6 +45,14 @@ const fetchFnCursorAndTotal = jest.fn(() =>
   })
 )
 
+const fetchFnDelayed = jest.fn(async () => {
+  await sleep(500)
+  return Promise.resolve({
+    data: TEST_DATA,
+    totalCount: TOTAL_COUNT,
+  })
+})
+
 const editFn = jest.fn((id: ITestItem["id"], data: Omit<Partial<ITestItem>, "id">) =>
   Promise.resolve({ id, ...data })
 )
@@ -565,6 +573,17 @@ describe("Collection", () => {
       await c.init({ filters: { foo: "bar" } })
       expect(fetchFn).toBeCalledWith({ foo: "bar" })
     })
+
+    it("prevents duplicate call when already fetching", async () => {
+      jest.useFakeTimers()
+      const c = new Collection({ fetchFn: fetchFnDelayed })
+      c.init()
+      jest.advanceTimersByTime(100)
+      c.init()
+      expect(fetchFnDelayed).toBeCalledTimes(1)
+      jest.runAllTimers()
+      expect(fetchFnDelayed).toBeCalledTimes(1)
+    })
   })
 
   describe("syncParamsToUrl", () => {
@@ -637,3 +656,5 @@ describe("Collection", () => {
 //     expect(result).toBeInstanceOf(Collection)
 //   })
 // })
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
