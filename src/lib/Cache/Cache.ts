@@ -66,8 +66,10 @@ export class Cache<TItem extends IObjectWithId> {
     return this.items.get(id.toString())
   }
 
-  save = (item: TItem): TItem => {
-    this.invalidateQueries()
+  save = (item: TItem, invalidate = true): TItem => {
+    if (invalidate) {
+      this.invalidateQueries()
+    }
 
     const cached = this.get(item.id)
     if (cached) {
@@ -82,6 +84,7 @@ export class Cache<TItem extends IObjectWithId> {
   }
 
   invalidateQueries = () => {
+    console.log("invalidate")
     this.queries.clear()
   }
 
