@@ -154,7 +154,7 @@ export class Collection<
     append?: boolean
     clearFilters?: boolean
   }) => {
-    const { searchFn, errorHandlerFn } = this.config
+    const { searchFn, errorHandlerFn, cache } = this.config
     if (!searchFn) {
       return
     }
@@ -181,6 +181,10 @@ export class Collection<
         this.data.replace(this.selection.selected.concat(data))
       } else {
         this.data.replace(data)
+      }
+
+      if (cache) {
+        cache.saveQuery(this.queryString, data)
       }
 
       this.savePaginationState({ totalCount: data.length })
