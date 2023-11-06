@@ -16,6 +16,13 @@ export interface ICacheConfig<TItem extends IObjectWithId> {
    * Optionally provide initial data
    */
   initialData?: TItem[]
+
+  /**
+   * TODO
+   * @param TItem
+   * @returns
+   */
+  onAfterSaveItem?: (item: TItem) => void
 }
 
 export class Cache<TItem extends IObjectWithId> {
@@ -72,11 +79,14 @@ export class Cache<TItem extends IObjectWithId> {
     }
 
     const cached = this.get(item.id)
-    if (cached) {
-      return cached.merge(item)
+    const savedItem = cached ? cached.merge(item) : this.set(item).data
+
+    const { onAfterSaveItem } = this.config || {}
+    if (onAfterSaveItem) {
+      onAfterSaveItem(savedItem)
     }
 
-    return this.set(item as TItem).data
+    return savedItem
   }
 
   delete = (id: string | number) => {
@@ -84,7 +94,6 @@ export class Cache<TItem extends IObjectWithId> {
   }
 
   invalidateQueries = () => {
-    console.log("invalidate")
     this.queries.clear()
   }
 
@@ -95,7 +104,7 @@ export class Cache<TItem extends IObjectWithId> {
       prevPageCursor?: string
       nextPageCursor?: string
       totalCount?: number
-    }
+    } = {}
   ) => {
     const items = data.map((item) => {
       const cached = this.get(item.id)

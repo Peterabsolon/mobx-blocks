@@ -224,6 +224,7 @@ export class Collection<
 
       // TODO: remove any
       const res = await fetchFn(this.queryParams as any)
+
       this.data.replace(opts?.append ? this.data.concat(res.data) : res.data)
 
       if (cache) {
