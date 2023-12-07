@@ -44,6 +44,10 @@ export class Selection<TItem extends IAnyObject> {
     this.selected.push(item)
   }
 
+  addToStart = (item: TItem) => {
+    this.selected.unshift(item)
+  }
+
   remove = (item: TItem) => {
     this.selected.remove(item)
   }
